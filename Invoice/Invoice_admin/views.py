@@ -776,28 +776,35 @@ class UserDetailView(LoginRequiredMixin, View):
         try:
             user = User.objects.get(id=user_id)
             
-            # Get current subscription and history
-            current_subscription = user.user_subscription
-            subscription_history = user.subscriptions.all().order_by('-start_date')
+            # Get all invoices for this user
+            invoices = Invoice.objects.filter(user=user).order_by('-bill_date')
             
-            # Get user's URL history
-            
-            # Calculate days remaining for current subscription
-            if current_subscription:
-                current_subscription.days_remaining = (current_subscription.end_date - timezone.now()).days
-                if current_subscription.days_remaining < 0:
-                    current_subscription.days_remaining = 0
-            
-            return render(
-                request,
-                self.template_name,
-                {
-                    "user": user,
-                    "current_subscription": current_subscription,
-                    "subscription_history": subscription_history,
-                    "title": "User Detail",
-                },
+            # Calculate summary statistics
+            invoice_stats = invoices.aggregate(
+                total_invoices=Count('id'),
+                total_amount=Sum('total_amount'),
+                total_jugs=Sum('jug_count'),
+                total_bottles=Sum('bottle_count')
             )
+            
+            # Handle None values from aggregation
+            total_invoices = invoice_stats['total_invoices'] or 0
+            total_amount = invoice_stats['total_amount'] or 0
+            total_jugs = invoice_stats['total_jugs'] or 0
+            total_bottles = invoice_stats['total_bottles'] or 0
+            
+            context = {
+                "user": user,
+                "title": "User Detail",
+                "invoices": invoices,
+                "total_invoices": total_invoices,
+                "total_amount": total_amount,
+                "total_jugs": total_jugs,
+                "total_bottles": total_bottles,
+            }
+            
+            return render(request, self.template_name, context)
+            
         except User.DoesNotExist:
             return redirect("view_dashboard")
 
@@ -805,31 +812,37 @@ class UserDetailView(LoginRequiredMixin, View):
         try:
             user = User.objects.get(id=user_id)
             
-            # Get current subscription and history
-            current_subscription = user.user_subscription
-            subscription_history = user.subscriptions.all().order_by('-start_date')
+            # Get all invoices for this user
+            invoices = Invoice.objects.filter(user=user).order_by('-bill_date')
             
-            # Get user's URL history
-            
-            # Calculate days remaining for current subscription
-            if current_subscription:
-                current_subscription.days_remaining = (current_subscription.end_date - timezone.now()).days
-                if current_subscription.days_remaining < 0:
-                    current_subscription.days_remaining = 0
-            
-            return render(
-                request,
-                self.template_name,
-                {
-                    "user": user,
-                    "current_subscription": current_subscription,
-                    "subscription_history": subscription_history,
-                    "title": "User Detail",
-                },
+            # Calculate summary statistics
+            invoice_stats = invoices.aggregate(
+                total_invoices=Count('id'),
+                total_amount=Sum('total_amount'),
+                total_jugs=Sum('jug_count'),
+                total_bottles=Sum('bottle_count')
             )
+            
+            # Handle None values from aggregation
+            total_invoices = invoice_stats['total_invoices'] or 0
+            total_amount = invoice_stats['total_amount'] or 0
+            total_jugs = invoice_stats['total_jugs'] or 0
+            total_bottles = invoice_stats['total_bottles'] or 0
+            
+            context = {
+                "user": user,
+                "title": "User Detail",
+                "invoices": invoices,
+                "total_invoices": total_invoices,
+                "total_amount": total_amount,
+                "total_jugs": total_jugs,
+                "total_bottles": total_bottles,
+            }
+            
+            return render(request, self.template_name, context)
+            
         except User.DoesNotExist:
             return redirect("view_dashboard")
-
 
 ############################ User Active & Deactivate Function ########################################
 @method_decorator(permission_required('default_user_list'), name='dispatch')
@@ -938,140 +951,93 @@ class ModuleDeleteView(View):
         
         return redirect('module_list')
 
-
-########################## Sub Admin Views ###############################
-@method_decorator(permission_required('subadmin_list'), name='dispatch')
-class SubAdminListView(View):
+@method_decorator(permission_required('customer_list'), name='dispatch')
+class CustomerListView(View):
     def get(self, request):
-        subadmins = User.objects.filter(role_id=3)  # Assuming role_id 3 is for subadmins
-        return render(request, 'Admin/User/Sub_Admin_List.html', {
-            'subadmins': subadmins,
-            'breadcrumb': {'child': 'Sub Admin Management'}
+        customers = User.objects.filter(role_id=2)  # role_id 2 is for customers
+        return render(request, 'Admin/User/Customer_List.html', {
+            'customers': customers,
+            'breadcrumb': {'child': 'Customer Management'}
         })
 
-@method_decorator(permission_required('subadmin_list'), name='dispatch')
-class SubAdminCreateView(View):
+@method_decorator(permission_required('customer_list'), name='dispatch')
+class CustomerCreateView(View):
     def post(self, request):
         name = request.POST.get('name')
-        email = request.POST.get('email')
         phone = request.POST.get('phone')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
+        address = request.POST.get('address', '')
         
         # Validate required fields
-        if not all([name, email, phone, password, confirm_password]):
-            messages.error(request, 'All fields are required')
-            return redirect('subadmin_list')
+        if not all([name, phone]):
+            messages.error(request, 'Name and Phone are required')
+            return redirect('customer_list')
             
-        # Check if passwords match
-        if password != confirm_password:
-            messages.error(request, 'Passwords do not match')
-            return redirect('subadmin_list')
+        # Check if phone already exists
+        if User.objects.filter(phone=phone).exists():
+            messages.error(request, 'This phone number is already registered')
+            return redirect('customer_list')
             
-        # Check if email already exists
-        if User.objects.filter(email=email).exists():
-            messages.error(request, 'This email is already registered')
-            return redirect('subadmin_list')
-            
-        # Generate username from email (handle duplicates)
-        username = name
-        counter = 1
-        while User.objects.filter(username=username).exists():
-            username = f"{name}{counter}"
-            counter += 1
+        # Generate username from phone number (unique)
+        username = f"cust_{phone}"
         
         try:
-            # Create the subadmin user
+            # Create the customer user
             user = User.objects.create(
                 name=name,
                 username=username,
-                email=email,
                 phone=phone,
-                password=make_password(password),  # Use the provided password
-                role_id=3,  # Subadmin role
-                is_staff=True,
+                address=address,
+                role_id=2,  # Customer role
+                is_staff=False,
                 is_active=True
             )
             
-            # Send email with credentials
-            subject = _('You have been added as a Sub Admin')
-            email_sent = send_sub_admin_detail(
-                email=email,
-                name=name,
-                username=username,
-                password=password,
-                subject=subject
-            )
-
-            if not email_sent:
-                messages.warning(request, 'Sub Admin created but email could not be sent')
-            else:
-                messages.success(request, 'Sub Admin created successfully and email sent with credentials')
+            messages.success(request, 'Customer created successfully')
         except Exception as e:
-            messages.error(request, f'Error creating Sub Admin: {str(e)}')
+            messages.error(request, f'Error creating Customer: {str(e)}')
         
-        return redirect('subadmin_list')
+        return redirect('customer_list')
 
-@method_decorator(permission_required('subadmin_list'), name='dispatch')
-class SubAdminEditView(View):
-    def get(self, request, pk):
-        user = get_object_or_404(User, pk=pk, role_id=3)
-        return JsonResponse({
-            'name': user.name,
-            'email': user.email,
-            'phone': user.phone
-        })
-    
+@method_decorator(permission_required('customer_list'), name='dispatch')
+class CustomerEditView(View):
     def post(self, request, pk):
-        user = get_object_or_404(User, pk=pk, role_id=3)
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
+        user = get_object_or_404(User, pk=pk, role_id=2)
         
-        # Check if passwords are provided and match
-        if password or confirm_password:
-            if password != confirm_password:
-                messages.error(request, 'Passwords do not match')
-                return redirect('subadmin_list')
-            user.password = make_password(password)
-        
-        # Update other fields
+        # Update fields
         user.name = request.POST.get('name')
-        user.email = request.POST.get('email')
         user.phone = request.POST.get('phone')
+        user.address = request.POST.get('address', '')
         
         try:
             user.save()
-            messages.success(request, 'Sub Admin updated successfully')
+            messages.success(request, 'Customer updated successfully')
         except Exception as e:
-            messages.error(request, f'Error updating Sub Admin: {str(e)}')
+            messages.error(request, f'Error updating Customer: {str(e)}')
         
-        return redirect('subadmin_list')
+        return redirect('customer_list')
 
-# Sub Admin Toggle Status View
-@method_decorator(permission_required('subadmin_list'), name='dispatch')
-class SubAdminToggleStatusView(View):
+@method_decorator(permission_required('customer_list'), name='dispatch')
+class CustomerToggleStatusView(View):
     def post(self, request, pk):
-        user = get_object_or_404(User, pk=pk, role_id=3)
+        user = get_object_or_404(User, pk=pk, role_id=2)
         user.is_active = not user.is_active
         user.save()
         
         status = "activated" if user.is_active else "deactivated"
-        messages.success(request, f'Sub Admin {status} successfully')
-        return redirect('subadmin_list')
+        messages.success(request, f'Customer {status} successfully')
+        return redirect('customer_list')
 
-# Sub Admin Delete View
-@method_decorator(permission_required('subadmin_list'), name='dispatch')
-class SubAdminDeleteView(View):
+@method_decorator(permission_required('customer_list'), name='dispatch')
+class CustomerDeleteView(View):
     def post(self, request, pk):
-        user = get_object_or_404(User, pk=pk, role_id=3)
+        user = get_object_or_404(User, pk=pk, role_id=2)
         try:
             user.delete()
-            messages.success(request, 'Sub Admin deleted successfully')
+            messages.success(request, 'Customer deleted successfully')
         except Exception as e:
-            messages.error(request, f'Error deleting Sub Admin: {str(e)}')
+            messages.error(request, f'Error deleting Customer: {str(e)}')
         
-        return redirect('subadmin_list')
-  
+        return redirect('customer_list')
 
 ############################# Language Management ###############################
 def get_language(request):

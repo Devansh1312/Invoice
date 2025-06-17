@@ -44,7 +44,6 @@ urlpatterns = [
     path('user-roles/based-permissions/<int:role_id>/', RolePermissionView.as_view(), name='role_permissions'),
     
     # User Management URLs
-    path('default-user/', DefaultUserList.as_view(), name='default_user_list'),
     path('default-user/detail/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
     path('default-user/user/<int:pk>/toggle-status/', ToggleUserStatusView.as_view(), name='user_toggle_status'),
     
@@ -54,15 +53,13 @@ urlpatterns = [
     path('modules/edit/<int:pk>/', ModuleEditView.as_view(), name='module_edit'),
     path('modules/delete/<int:pk>/', ModuleDeleteView.as_view(), name='module_delete'),
 
-    # SubAdmin URLs
-    path('subadmins/', SubAdminListView.as_view(), name='subadmin_list'),
-    path('subadmins/detail/<int:user_id>/', UserDetailView.as_view(), name='subadmin_detail'),
-
-    # SubAdmin Create, Edit, Toggle Status, and Delete URLs
-    path('subadmins/create/', SubAdminCreateView.as_view(), name='subadmin_create'),
-    path('subadmins/<int:pk>/edit/', SubAdminEditView.as_view(), name='subadmin_edit'),
-    path('subadmins/<int:pk>/toggle-status/', SubAdminToggleStatusView.as_view(), name='subadmin_toggle_status'),
-    path('subadmins/<int:pk>/delete/', SubAdminDeleteView.as_view(), name='subadmin_delete'),
+    # URLs
+    path('customers/', CustomerListView.as_view(), name='customer_list'),
+    path('customers/detail/<int:user_id>/', UserDetailView.as_view(), name='customer_detail'),
+    path('customers/create/', CustomerCreateView.as_view(), name='customer_create'),
+    path('customers/<int:pk>/edit/', CustomerEditView.as_view(), name='customer_edit'),
+    path('customers/<int:pk>/toggle-status/', CustomerToggleStatusView.as_view(), name='customer_toggle_status'),
+    path('customers/<int:pk>/delete/', CustomerDeleteView.as_view(), name='customer_delete'),
 ]
 
 

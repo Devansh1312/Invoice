@@ -8,16 +8,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
 <style>
 /* Status-specific badge styles */
-.badge-active {
+.badge-paid {
   background-color: #28a745; /* Green */
-}
-
-.badge-expired {
-  background-color: #dc3545; /* Red */
-}
-
-.badge-cancelled {
-  background-color: #6c757d; /* Gray */
 }
 
 .badge-pending {
@@ -25,16 +17,16 @@
   color: black !important;
 }
 
-.badge-renewed {
-  background-color: #17a2b8; /* Cyan */
+.badge-overdue {
+  background-color: #dc3545; /* Red */
 }
 
-.badge-upgraded {
-  background-color: #6610f2; /* Purple */
+.badge-cancelled {
+  background-color: #6c757d; /* Gray */
 }
 
 /* Base badge style */
-.subscription-badge {
+.invoice-badge {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 15px;
@@ -45,22 +37,17 @@
   text-transform: capitalize;
 }
 
-/* Status-based colors */
-.badge-1 {
-  background-color: #28a745; /* Green - Safe / Secure */
+/* Template-based colors */
+.badge-template-1 {
+  background-color: #007bff; /* Blue */
 }
 
-.badge-2 {
-  background-color: #dc3545; /* Red - Unsafe / Unsecured */
+.badge-template-2 {
+  background-color: #28a745; /* Green */
 }
 
-.badge-3 {
-  background-color: #6c757d; /* Gray - Unknown / No response */
-}
-
-.badge-4 {
-  background-color: #ffc107; /* Yellow - Moderate / Expiring soon */
-  color: black !important;
+.badge-template-3 {
+  background-color: #6f42c1; /* Purple */
 }
 
 /* Fix for DataTables in tabs */
@@ -141,8 +128,8 @@
     font-size: small;
 }
 
-/* URL Detail Card Styles */
-.url-detail-card {
+/* Invoice Detail Card Styles */
+.invoice-detail-card {
     background: #f8f9fa;
     border-radius: 8px;
     padding: 20px;
@@ -150,57 +137,37 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.url-detail-title {
+.invoice-detail-title {
     font-weight: 600;
     color: #495057;
     margin-bottom: 15px;
 }
 
-.url-content {
+.invoice-content {
     background: #fff;
     padding: 15px;
     border-radius: 5px;
     border-left: 4px solid #3a7afe;
     margin-bottom: 15px;
-    word-break: break-all;
 }
 
-.threat-badge {
-    display: inline-block;
-    padding: 5px 10px;
-    background-color: #e9ecef;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    margin-right: 5px;
-    margin-bottom: 5px;
-}
-
-.rating-progress {
-    height: 8px;
-    width: 100%;
-}
-
-.rating-value {
-    font-size: 1.2rem;
+.amount-display {
+    font-size: 1.5rem;
     font-weight: bold;
-}
-
-.rating-label {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin-bottom: 5px;
+    color: #28a745;
 }
 
 /* Responsive adjustments */
 @media (max-width: 767px) {
-    .url-detail-card {
+    .invoice-detail-card {
         padding: 15px;
     }
     
-    .url-content {
+    .invoice-content {
         padding: 10px;
     }
 }
+
 /* Custom Modal Styling */
 .custom-modal-content {
     border-radius: 10px;
@@ -208,21 +175,31 @@
     padding: 15px;
 }
 
-/* Cards */
-.url-detail-card {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    border-left: 5px solid #0d6efd;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
 /* Titles */
-.url-detail-title {
+.invoice-detail-title {
     font-weight: 600;
     font-size: 16px;
     margin-bottom: 15px;
     color: #333;
+}
+
+/* Summary cards */
+.summary-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.summary-number {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.summary-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
 }
 </style>
 {% endblock %} 
@@ -241,16 +218,9 @@
                         <h4 class="card-title mb-0">Profile Details</h4>
 
                         <div class="d-flex flex-wrap gap-2">
-                            <!-- Export Report Button -->
-                            <!-- <a href="{% url 'user_report_export' user.id %}" class="btn btn-primary btn-sm">
-                                <i class="fa fa-download me-1"></i> Export Report
-                            </a> -->
-
                             <!-- Back Button -->
                             {% if user.role.id == 2 %}
-                                {% url 'default_user_list' as back_url %}
-                            {% elif user.role.id == 3 %}
-                                {% url 'subadmin_list' as back_url %}
+                                {% url 'customer_list' as back_url %}
                             {% else %}
                                 {% url 'Dashboard' as back_url %}
                             {% endif %}
@@ -287,49 +257,42 @@
                                                 <h6>
                                                     <i class="fa fa-user"></i> Full Name
                                                 </h6>
-                                                <span> {% if user.name %} {{ user.name }} {% else %} {% if user.first_name and user.last_name %} {{ user.first_name }} {{ user.last_name }} {% elif user.first_name %} {{ user.first_name }} {% elif user.last_name %} {{ user.last_name }} {% else %} None {% endif %} {% endif %} </span>
+                                                <span>
+                                                    {% if user.name %} 
+                                                        {{ user.name }} 
+                                                    {% else %} 
+                                                        {% if user.first_name and user.last_name %} 
+                                                            {{ user.first_name }} {{ user.last_name }} 
+                                                        {% elif user.first_name %} 
+                                                            {{ user.first_name }} 
+                                                        {% elif user.last_name %} 
+                                                            {{ user.last_name }} 
+                                                        {% else %} 
+                                                            None 
+                                                        {% endif %} 
+                                                    {% endif %}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
-                                    {% if user.is_deleted %}
                                     <div class="row g-3">
                                         <div class="col-12 col-md-6">
                                             <div class="ttl-info text-start">
                                                 <h6>
-                                                    <i class=""></i> Deleted Reason
+                                                    <i class="fa fa-user"></i> Username
                                                 </h6>
-                                                <span>{{ user.deleted_reason_id.name_en|default:"None"}}</span>
+                                                <span>{{ user.username|default:"None" }}</span>
                                             </div>
                                         </div>
                                         <div class="col-12 col-md-6">
                                             <div class="ttl-info text-start">
                                                 <h6>
-                                                    <i class=""></i>Reason
+                                                    <i class="fa fa-calendar"></i> Joined Date
                                                 </h6>
-                                                <span>{{ user.deleted_reason|default:"None"}}</span>
+                                                <span>{{ user.created_at|date:"Y-m-d"|default:"None"}}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    {% else %}
-                                    <div class="row g-3">
-                                        <div class="col-12 col-md-6">
-                                            <div class="ttl-info text-start">
-                                                <h6>
-                                                    <i class=""></i> First Name
-                                                </h6>
-                                                <span>{{ user.first_name|default:"None" }}</span>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-md-6">
-                                            <div class="ttl-info text-start">
-                                                <h6>
-                                                    <i class=""></i> Last Name
-                                                </h6>
-                                                <span>{{ user.last_name|default:"None"}}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {% endif %}
                                 </div>
                                 
                                 <!-- Middle Column (Hidden on mobile) -->
@@ -359,6 +322,14 @@
                                                 <span>{{ user.phone|default:"None" }}</span>
                                             </div>
                                         </div>
+                                        <div class="col-12 col-md-6">
+                                            <div class="ttl-info text-start">
+                                                <h6>
+                                                    <i class="fa fa-map-marker"></i> Address
+                                                </h6>
+                                                <span>{{ user.address|default:"None" }}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="row g-3">
                                         <div class="col-12 col-md-12">
@@ -372,50 +343,39 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <hr>
-                        
-                        <!-- Subscription Information -->
-                        <h4 class="mb-4">Subscription Details</h4>
-                        
-                        <!-- Current Subscription -->
-                        {% if current_subscription %}
-                        <div class="card subscription-card current-subscription mb-4">
-                            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                                <h5 class="mb-0">Current Plan</h5>
-                                <span class="subscription-badge badge-{{ current_subscription.get_status_display|lower }}">{{ current_subscription.get_status_display }}</span>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-12 col-md-4 mb-3 mb-md-0">
-                                        <h6>{{ current_subscription.subscription.name_en }}</h6>
-                                        <p class="text-muted">
-                                            {{ current_subscription.subscription.get_duration_display }} Plan
-                                        </p>
-                                        <p><strong>Price:</strong> ${{ current_subscription.amount_paid }}</p>
-                                    </div>
-                                    <div class="col-12 col-md-4 mb-3 mb-md-0">
-                                        <p><strong>Start Date:</strong> {{ current_subscription.start_date|date:"M d, Y" }}</p>
-                                        <p><strong>End Date:</strong> {{ current_subscription.end_date|date:"M d, Y" }}</p>
-                                        <p><strong>Days Remaining:</strong> {{ current_subscription.days_remaining }}</p>
-                                    </div>
-                                    <div class="col-12 col-md-4">
-                                        <p><strong>URLs Used:</strong> {{ current_subscription.used_url }}/{{ current_subscription.allowed_url }}</p>
-                                        <p><strong>Payment Method:</strong> {{ current_subscription.payment_method|default:"-" }}</p>
-                                        <p><strong>Transaction ID:</strong> {{ current_subscription.transaction_id|default:"-" }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% else %}
-                        <div class="alert alert-warning">
-                            No active subscription found.
-                        </div>
-                        {% endif %}
+                        </div> 
                     </div>
                 </div>
             </div>
+
+            <!-- Invoice Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="summary-card">
+                        <div class="summary-number">{{ total_invoices }}</div>
+                        <div class="summary-label">Total Invoices</div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="summary-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="summary-number">₹{{ total_amount|floatformat:2 }}</div>
+                        <div class="summary-label">Total Amount</div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="summary-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="summary-number">{{ total_jugs }}</div>
+                        <div class="summary-label">Total Jugs</div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="summary-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <div class="summary-number">{{ total_bottles }}</div>
+                        <div class="summary-label">Total Bottles</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Datatable Section -->
             <div class="row">
                 <div class="col-12">
@@ -424,78 +384,46 @@
                             <!-- Add tab navigation -->
                             <ul class="nav nav-tabs" id="dataTab" role="tablist">
                                 <li class="nav-item">
-                                    <a class="nav-link active" id="url-history-tab" data-bs-toggle="tab" href="#url-history" role="tab" aria-controls="url-history" aria-selected="true">URL History</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" id="subscription-history-tab" data-bs-toggle="tab" href="#subscription-history" role="tab" aria-controls="subscription-history" aria-selected="false">Subscription History</a>
+                                    <a class="nav-link active" id="invoice-history-tab" data-bs-toggle="tab" href="#invoice-history" role="tab" aria-controls="invoice-history" aria-selected="true">Invoice History</a>
                                 </li>
                             </ul>
                             <div class="tab-content" id="dataTabContent">
-                                <!-- URL History Tab  -->
-                                <div class="tab-pane fade show active" id="url-history" role="tabpanel" aria-labelledby="url-history-tab">
+                                <!-- Invoice History Tab  -->
+                                <div class="tab-pane fade show active" id="invoice-history" role="tabpanel" aria-labelledby="invoice-history-tab">
                                     <div class="table-responsive">
-                                        <table class="table table-striped table-bordered" id="url-history-table">
+                                        <table class="table table-striped table-bordered" id="invoice-history-table">
                                             <thead>
                                                 <tr>
                                                     <th>No.</th>
-                                                    <th>Domain</th>
-                                                    <th>SSL Status</th>
-                                                    <th>Reputation</th>
-                                                    <th>Rating</th>
-                                                    <th>User Response</th>
+                                                    <th>Bill Number</th>
+                                                    <th>Template</th>
                                                     <th>Date</th>
+                                                    <th>Jugs</th>
+                                                    <th>Bottles</th>
+                                                    <th>Total Amount</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {% for url in url_history %}
+                                                {% for invoice in invoices %}
                                                 <tr>
                                                     <td>{{ forloop.counter }}</td>
-                                                    <td>{{ url.domain|default:url.url|truncatechars:30 }}</td>
+                                                    <td>{{ invoice.bill_number }}</td>
                                                     <td>
-                                                        {% if url.ssl_status == 'Secure' %}
-                                                            <span class="subscription-badge badge-1">Secure</span>
-                                                        {% elif url.ssl_status == 'Unsecured' %}
-                                                            <span class="subscription-badge badge-2">Unsecured</span>
-                                                        {% elif url.ssl_status == 'Moderate' %}
-                                                            <span class="subscription-badge badge-4">Expiring Soon</span>
+                                                        {% if invoice.bill_template == '1' %}
+                                                            <span class="invoice-badge badge-template-1">હરેશ એ પટેલ</span>
+                                                        {% elif invoice.bill_template == '2' %}
+                                                            <span class="invoice-badge badge-template-2">ખોડલ વોટર સપ્લાયર્સ</span>
+                                                        {% elif invoice.bill_template == '3' %}
+                                                            <span class="invoice-badge badge-template-3">ભાવેશ આર શાહ</span>
                                                         {% else %}
-                                                            <span class="subscription-badge badge-3">Unknown</span>
+                                                            <span class="invoice-badge badge-cancelled">Unknown</span>
                                                         {% endif %}
                                                     </td>
-                                                    <td>
-                                                        {% if 'Safe' in url.domain_reputation %}
-                                                            <span class="subscription-badge badge-1">Safe</span>
-                                                        {% elif 'Unsafe' in url.domain_reputation %}
-                                                            <span class="subscription-badge badge-2">Unsafe</span>
-                                                        {% elif 'Moderate' in url.domain_reputation %}
-                                                            <span class="subscription-badge badge-4">Moderate</span>
-                                                        {% else %}
-                                                            <span class="subscription-badge badge-3">Unknown</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        <div class="progress" style="height: 8px; width: 100px;">
-                                                            {% if url.rating >= 7 %}
-                                                                <div class="progress-bar bg-success" role="progressbar" style="width: {% widthratio url.rating 1 10 %}%" aria-valuenow="{{ url.rating }}" aria-valuemin="0" aria-valuemax="10"></div>
-                                                            {% elif url.rating >= 4 %}
-                                                                <div class="progress-bar bg-warning" role="progressbar" style="width: {% widthratio url.rating 1 10 %}%" aria-valuenow="{{ url.rating }}" aria-valuemin="0" aria-valuemax="10"></div>
-                                                            {% else %}
-                                                                <div class="progress-bar bg-danger" role="progressbar" style="width: {% widthratio url.rating 1 10 %}%" aria-valuenow="{{ url.rating }}" aria-valuemin="0" aria-valuemax="10"></div>
-                                                            {% endif %}
-                                                        </div>
-                                                        <small>{{ url.rating }}/10</small>
-                                                    </td>
-                                                    <td>
-                                                        {% if url.user_response == 0 %}
-                                                            <span class="subscription-badge badge-2">Unsafe</span>
-                                                        {% elif url.user_response == 1 %}
-                                                            <span class="subscription-badge badge-1">Safe</span>
-                                                        {% else %}
-                                                            <span class="subscription-badge badge-3">No Response</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>{{ url.created_at|date:"Y-m-d" }}</td>
+                                                    <td>{{ invoice.bill_date|date:"Y-m-d" }}</td>
+                                                    <td>{{ invoice.jug_count|default:0 }}</td>
+                                                    <td>{{ invoice.bottle_count|default:0 }}</td>
+                                                    <td class="amount-display">₹{{ invoice.total_amount|floatformat:2 }}</td>
                                                     <td>
                                                         <div class="action-menu-container">
                                                             <a href="#" class="three-dots-menu">
@@ -504,21 +432,21 @@
                                                             <div class="action-card">
                                                                 <ul>
                                                                     <li>
-                                                                        <a href="#" class="view-url-btn"
-                                                                           data-url-id="{{ url.id }}"
-                                                                           data-url-domain="{{ url.domain|default:'' }}"
-                                                                           data-url-full="{{ url.url|default:'' }}"
-                                                                           data-url-ssl-status="{{ url.ssl_status|default:'' }}"
-                                                                           data-url-ssl-expiry="{{ url.ssl_expiry_days|default:'' }}"
-                                                                           data-url-ssl-validity="{{ url.ssl_validity|default:'' }}"
-                                                                           data-url-reputation="{{ url.domain_reputation|default:'' }}"
-                                                                           data-url-threats="{{ url.known_threats|default:'' }}"
-                                                                           data-url-history="{{ url.domain_history|default:'' }}"
-                                                                           data-url-recommendation="{{ url.recommendation|default:'' }}"
-                                                                           data-url-rating="{{ url.rating }}"
-                                                                           data-url-user-response="{{ url.user_response }}"
-                                                                           data-url-date="{{ url.created_at|date:'Y-m-d H:i' }}">
-                                                                           View
+                                                                        <a href="#" class="view-invoice-btn"
+                                                                           data-invoice-id="{{ invoice.id }}"
+                                                                           data-bill-number="{{ invoice.bill_number }}"
+                                                                           data-bill-template="{{ invoice.get_bill_template_display }}"
+                                                                           data-bill-date="{{ invoice.bill_date|date:'Y-m-d' }}"
+                                                                           data-bill-amount="{{ invoice.bill_amount }}"
+                                                                           data-jug="{{ invoice.jug }}"
+                                                                           data-jug-count="{{ invoice.jug_count }}"
+                                                                           data-jug-amount="{{ invoice.jug_amount }}"
+                                                                           data-bottle="{{ invoice.bottle }}"
+                                                                           data-bottle-count="{{ invoice.bottle_count }}"
+                                                                           data-bottle-amount="{{ invoice.bottle_amount }}"
+                                                                           data-total-amount="{{ invoice.total_amount }}"
+                                                                           data-created-at="{{ invoice.bill_created_at|date:'Y-m-d H:i' }}">
+                                                                           View Details
                                                                         </a>
                                                                     </li>
                                                                 </ul>
@@ -526,46 +454,9 @@
                                                         </div>
                                                     </td>
                                                 </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                <!-- Subscription History Tab -->
-                                <div class="tab-pane fade" id="subscription-history" role="tabpanel" aria-labelledby="subscription-history-tab">
-                                    <div class="table-responsive">
-                                        <table class="table table-striped table-bordered" id="subscription-history-table">
-                                            <thead>
+                                                {% empty %}
                                                 <tr>
-                                                    <th>Id</th>
-                                                    <th>Plan</th>
-                                                    <th>Duration</th>
-                                                    <th>Status</th>
-                                                    <th>Period</th>
-                                                    <th>URLs</th>
-                                                    <th>Price</th>
-                                                    <th>Payment</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for sub in subscription_history %}
-                                                <tr>
-                                                    <td>{{ forloop.counter }}</td>
-                                                    <td>{{ sub.subscription.name_en }}</td>
-                                                    <td>{{ sub.subscription.get_duration_display }}</td>
-                                                    <td>
-                                                        <span class="subscription-badge badge-{{ sub.get_status_display|lower }}">{{ sub.get_status_display }}</span>
-                                                    </td>
-                                                    <td>
-                                                        {{ sub.start_date|date:"M d, Y" }}<br>
-                                                        {{ sub.end_date|date:"M d, Y" }}
-                                                    </td>
-                                                    <td>{{ sub.used_url }}/{{ sub.allowed_url }}</td>
-                                                    <td>${{ sub.amount_paid }}</td>
-                                                    <td>
-                                                        {{ sub.payment_method|default:"-" }}<br>
-                                                        <small>{{ sub.transaction_id|default:"" }}</small>
-                                                    </td>
+                                                    <td colspan="8" class="text-center">No invoices found for this user.</td>
                                                 </tr>
                                                 {% endfor %}
                                             </tbody>
@@ -581,78 +472,68 @@
     </div>
 </div>
 
-<!-- View URL Modal -->
-<div class="modal fade" id="viewURLModal" tabindex="-1" aria-labelledby="viewURLModalLabel" aria-hidden="true">
+<!-- View Invoice Modal -->
+<div class="modal fade" id="viewInvoiceModal" tabindex="-1" aria-labelledby="viewInvoiceModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content custom-modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="viewURLModalLabel">URL Details</h5>
+                <h5 class="modal-title" id="viewInvoiceModalLabel">Invoice Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="url-detail-card mb-4">
-                    <h6 class="url-detail-title">URL Information</h6>
-                    <div class="url-content mb-3" id="view-url-full">
-                        <!-- URL will be inserted here -->
-                    </div>
+                <div class="invoice-detail-card mb-4">
+                    <h6 class="invoice-detail-title">Invoice Information</h6>
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <p><strong>Domain:</strong> <span id="view-domain">Loading...</span></p>
+                            <p><strong>Bill Number:</strong> <span id="view-bill-number">Loading...</span></p>
                         </div>
                         <div class="col-12 col-md-6">
-                            <p><strong>Date Checked:</strong> <span id="view-date">Loading...</span></p>
+                            <p><strong>Template:</strong> <span id="view-bill-template">Loading...</span></p>
                         </div>
                         <div class="col-12 col-md-6">
-                            <p><strong>User Response:</strong> 
-                                <span id="view-user-response" class="subscription-badge badge-3">Loading...</span>
-                            </p>
+                            <p><strong>Bill Date:</strong> <span id="view-bill-date">Loading...</span></p>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <p><strong>Created At:</strong> <span id="view-created-at">Loading...</span></p>
                         </div>
                     </div>
                 </div>
 
                 <div class="row g-4">
                     <div class="col-12 col-md-6">
-                        <div class="url-detail-card">
-                            <h6 class="url-detail-title">SSL Details</h6>
-                            <p><strong>SSL Status:</strong> <span id="view-ssl-status">Loading...</span></p>
-                            <p><strong>Expiry Days:</strong> <span id="view-ssl-expiry">Loading...</span></p>
-                            <p><strong>Validity:</strong> <span id="view-ssl-validity">Loading...</span></p>
+                        <div class="invoice-detail-card">
+                            <h6 class="invoice-detail-title">Jug Details</h6>
+                            <p><strong>Jug Price:</strong> ₹<span id="view-jug-price">0</span></p>
+                            <p><strong>Jug Count:</strong> <span id="view-jug-count">0</span></p>
+                            <p><strong>Jug Amount:</strong> ₹<span id="view-jug-amount">0.00</span></p>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
-                        <div class="url-detail-card">
-                            <h6 class="url-detail-title">Security Rating</h6>
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="me-3">
-                                    <span class="rating-value" id="view-rating-value">0</span>/10
-                                </div>
-                                <div class="flex-grow-1">
-                                    <p class="rating-label mb-1">Rating</p>
-                                    <div class="progress rating-progress">
-                                        <div class="progress-bar" id="view-rating-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <p><strong>Reputation:</strong> <span id="view-reputation">Loading...</span></p>
+                        <div class="invoice-detail-card">
+                            <h6 class="invoice-detail-title">Bottle Details</h6>
+                            <p><strong>Bottle Price:</strong> ₹<span id="view-bottle-price">0</span></p>
+                            <p><strong>Bottle Count:</strong> <span id="view-bottle-count">0</span></p>
+                            <p><strong>Bottle Amount:</strong> ₹<span id="view-bottle-amount">0.00</span></p>
                         </div>
                     </div>
                 </div>
 
-                <div class="url-detail-card mt-4">
-                    <h6 class="url-detail-title">Security Analysis</h6>
-                    <div class="mb-3">
-                        <p><strong>Known Threats:</strong></p>
-                        <div class="threat-container" id="view-threats-container">
-                            <span class="text-muted">Loading threats...</span>
+                <div class="invoice-detail-card mt-4">
+                    <h6 class="invoice-detail-title">Amount Summary</h6>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <p><strong>Bill Amount:</strong> <span class="amount-display">₹<span id="view-bill-amount">0.00</span></span></p>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <p><strong>Jug Total:</strong> <span class="amount-display">₹<span id="view-jug-total">0.00</span></span></p>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <p><strong>Bottle Total:</strong> <span class="amount-display">₹<span id="view-bottle-total">0.00</span></span></p>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <p><strong>Domain History:</strong></p>
-                        <p id="view-domain-history" class="text-muted">Loading history...</p>
-                    </div>
-                    <div>
-                        <p><strong>Recommendation:</strong></p>
-                        <p id="view-recommendation" class="text-muted">Loading recommendation...</p>
+                    <hr>
+                    <div class="text-center">
+                        <h4><strong>Total Amount: <span class="amount-display">₹<span id="view-total-amount">0.00</span></span></strong></h4>
                     </div>
                 </div>
             </div>
@@ -676,32 +557,24 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Initialize DataTables
-        let urlHistoryTable = $('#url-history-table').DataTable({
+        let invoiceHistoryTable = $('#invoice-history-table').DataTable({
             responsive: true,
+            order: [[3, 'desc']], // Order by date column (index 3) in descending order
             language: {
-                emptyTable: "No URL history found"
-            }
-        });
-        
-        let subscriptionHistoryTable = $('#subscription-history-table').DataTable({
-            responsive: true,
-            language: {
-                emptyTable: "No subscription history found"
+                emptyTable: "No invoice history found"
             }
         });
 
         // Adjust DataTables when tabs are switched
         $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
             const target = $(e.target).attr("href");
-            if (target === "#url-history") {
-                urlHistoryTable.columns.adjust().responsive.recalc();
-            } else if (target === "#subscription-history") {
-                subscriptionHistoryTable.columns.adjust().responsive.recalc();
+            if (target === "#invoice-history") {
+                invoiceHistoryTable.columns.adjust().responsive.recalc();
             }
         });
         
         // Initialize the modal
-        const viewURLModal = new bootstrap.Modal(document.getElementById('viewURLModal'));
+        const viewInvoiceModal = new bootstrap.Modal(document.getElementById('viewInvoiceModal'));
         
         // Handle click on action menus
         document.addEventListener('click', function(event) {
@@ -733,12 +606,12 @@
             }
         });
         
-        // Handle click on view URL buttons
+        // Handle click on view invoice buttons
         document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('view-url-btn') || event.target.closest('.view-url-btn')) {
+            if (event.target.classList.contains('view-invoice-btn') || event.target.closest('.view-invoice-btn')) {
                 event.preventDefault();
-                const button = event.target.classList.contains('view-url-btn') ? 
-                    event.target : event.target.closest('.view-url-btn');
+                const button = event.target.classList.contains('view-invoice-btn') ? 
+                    event.target : event.target.closest('.view-invoice-btn');
                 
                 // Close any open action menus first
                 document.querySelectorAll('.action-card').forEach(card => {
@@ -746,87 +619,43 @@
                 });
                 
                 // Get all data attributes
-                const domain = button.getAttribute('data-url-domain') || '';
-                const fullUrl = button.getAttribute('data-url-full') || '';
-                const sslStatus = button.getAttribute('data-url-ssl-status') || 'Unknown';
-                const sslExpiry = button.getAttribute('data-url-ssl-expiry') || 'N/A';
-                const sslValidity = button.getAttribute('data-url-ssl-validity') || 'N/A';
-                const reputation = button.getAttribute('data-url-reputation') || 'Unknown';
-                const threats = button.getAttribute('data-url-threats') || '';
-                const history = button.getAttribute('data-url-history') || 'No history available';
-                const recommendation = button.getAttribute('data-url-recommendation') || 'No recommendation available';
-                const rating = parseInt(button.getAttribute('data-url-rating')) || 0;
-                const userResponse = parseInt(button.getAttribute('data-url-user-response'));
-                const date = button.getAttribute('data-url-date') || 'Date not available';
-                console.log(userResponse);
+                const billNumber = button.getAttribute('data-bill-number') || '';
+                const billTemplate = button.getAttribute('data-bill-template') || '';
+                const billDate = button.getAttribute('data-bill-date') || '';
+                const billAmount = parseFloat(button.getAttribute('data-bill-amount')) || 0;
+                const jug = parseFloat(button.getAttribute('data-jug')) || 0;
+                const jugCount = parseInt(button.getAttribute('data-jug-count')) || 0;
+                const jugAmount = parseFloat(button.getAttribute('data-jug-amount')) || 0;
+                const bottle = parseFloat(button.getAttribute('data-bottle')) || 0;
+                const bottleCount = parseInt(button.getAttribute('data-bottle-count')) || 0;
+                const bottleAmount = parseFloat(button.getAttribute('data-bottle-amount')) || 0;
+                const totalAmount = parseFloat(button.getAttribute('data-total-amount')) || 0;
+                const createdAt = button.getAttribute('data-created-at') || '';
 
-                // Set URL and meta info
-                document.getElementById('view-domain').textContent = domain || 'Not available';
-                document.getElementById('view-url-full').textContent = fullUrl || 'Not available';
-                document.getElementById('view-date').textContent = date;
+                // Set basic invoice info
+                document.getElementById('view-bill-number').textContent = billNumber;
+                document.getElementById('view-bill-template').textContent = billTemplate;
+                document.getElementById('view-bill-date').textContent = billDate;
+                document.getElementById('view-created-at').textContent = createdAt;
                 
-                // Set SSL info
-                document.getElementById('view-ssl-status').textContent = sslStatus;
-                document.getElementById('view-ssl-expiry').textContent = sslExpiry ? `${sslExpiry} days` : 'N/A';
-                document.getElementById('view-ssl-validity').textContent = sslValidity;
+                // Set jug details
+                document.getElementById('view-jug-price').textContent = jug.toFixed(2);
+                document.getElementById('view-jug-count').textContent = jugCount;
+                document.getElementById('view-jug-amount').textContent = jugAmount.toFixed(2);
                 
-                // Set rating
-                document.getElementById('view-rating-value').textContent = rating;
-                const ratingBar = document.getElementById('view-rating-bar');
-                ratingBar.style.width = `${rating * 10}%`;
-                ratingBar.setAttribute('aria-valuenow', rating);
+                // Set bottle details
+                document.getElementById('view-bottle-price').textContent = bottle.toFixed(2);
+                document.getElementById('view-bottle-count').textContent = bottleCount;
+                document.getElementById('view-bottle-amount').textContent = bottleAmount.toFixed(2);
                 
-                // Set color based on rating
-                if (rating >= 7) {
-                    ratingBar.className = 'progress-bar bg-success';
-                } else if (rating >= 4) {
-                    ratingBar.className = 'progress-bar bg-warning';
-                } else {
-                    ratingBar.className = 'progress-bar bg-danger';
-                }
-                
-                // Set reputation
-                document.getElementById('view-reputation').textContent = reputation;
-                
-                // Set user response - fix the condition checks
-                const userResponseElement = document.getElementById('view-user-response');
-                if (userResponse === 0) {
-                    userResponseElement.textContent = 'Unsafe';
-                    userResponseElement.className = 'subscription-badge badge-2';
-                } else if (userResponse === 1) {
-                    userResponseElement.textContent = 'Safe';
-                    userResponseElement.className = 'subscription-badge badge-1';
-                } else {
-                    userResponseElement.textContent = 'No Response';
-                    userResponseElement.className = 'subscription-badge badge-3';
-                }
-                
-                // Set threats
-                const threatsContainer = document.getElementById('view-threats-container');
-                threatsContainer.innerHTML = '';
-                
-                if (threats && threats !== 'null' && threats !== '') {
-                    const threatList = threats.split(',');
-                    threatList.forEach(threat => {
-                        if (threat.trim()) {
-                            const badge = document.createElement('span');
-                            badge.className = 'threat-badge';
-                            badge.textContent = threat.trim();
-                            threatsContainer.appendChild(badge);
-                        }
-                    });
-                }
-                
-                if (threatsContainer.children.length === 0) {
-                    threatsContainer.innerHTML = '<span class="text-muted">No threats detected</span>';
-                }
-                
-                // Set domain history and recommendation
-                document.getElementById('view-domain-history').textContent = history;
-                document.getElementById('view-recommendation').textContent = recommendation;
+                // Set amounts
+                document.getElementById('view-bill-amount').textContent = billAmount.toFixed(2);
+                document.getElementById('view-jug-total').textContent = jugAmount.toFixed(2);
+                document.getElementById('view-bottle-total').textContent = bottleAmount.toFixed(2);
+                document.getElementById('view-total-amount').textContent = totalAmount.toFixed(2);
                 
                 // Show the modal
-                viewURLModal.show();
+                viewInvoiceModal.show();
             }
         });
     });
