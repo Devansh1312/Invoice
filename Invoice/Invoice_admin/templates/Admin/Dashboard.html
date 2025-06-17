@@ -1,0 +1,805 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load sass_tags %}
+
+{% block css %}
+<!-- Add custom CSS if needed here -->
+{% endblock %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+{% include "components/loader.html" %}
+
+<style>
+    :root {
+        --primary-color: #56d776;
+        --secondary-color: #78be20;
+        --accent-color: #f59e0b;
+        --dark-color: #058e00;
+        --light-color: #f8fafc;
+    }
+    
+    /* Common styles */
+    .page-body {
+        padding-top: 30px;
+    }
+    
+    .img-fluid {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Dashboard layout and responsiveness */
+    @media (max-width: 768px) {
+        .custom-margin {
+            margin-top: 100px !important;
+        }
+        .chart-container {
+            height: 300px !important;
+        }
+    }
+    
+    @media (min-width: 769px) {
+        .custom-margin {
+            margin-top: 0 !important;
+        }
+        .chart-container {
+            height: 350px;
+        }
+    }
+    
+    .h4 {
+        text-align: left !important;
+    }
+    
+    /* Profile box styling */
+    .profile-box {
+        position: relative;
+        border-radius: 8px;
+        background: linear-gradient(103.75deg, #262626 -13.9%, #78be20 79.68%);
+        color: #fff;
+        height: 300px; /* default for desktop */
+    }
+    
+    @media (max-width: 576px) {
+        .profile-box {
+            height: 208px; /* mobile view */
+        }
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .greeting-user h4 {
+        font-weight: 600;
+    }
+    
+    .whatsnew-btn {
+        margin-top: 30px !important;
+    }
+    
+    .cartoon {
+        position: absolute;
+        bottom: 10px;
+        right: 2px;
+        width: 200px;
+        height: auto;
+    }
+    
+    @media (max-width: 576px) {
+        .cartoon {
+            width: 150px;
+            top: 45px !important;
+            right: 0px !important;
+        }
+    }
+    
+    /* Stats cards styling */
+    .stats-card {
+        background-color: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        transition: all 0.3s ease;
+        min-height: 120px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid var(--secondary-color);
+        display: flex;
+        align-items: center;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stats-icon {
+        width: 60px;
+        height: 60px;
+        background-color: white;
+        border: 1px solid #f0f0f0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .stats-icon img {
+        width: 60%;
+        height: auto;
+    }
+    
+    .stats-content {
+        flex: 1;
+        padding-right: 1rem;
+    }
+    
+    .stats-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 0.2rem;
+    }
+    
+    .stats-label {
+        font-size: 1rem;
+        color: #44566f;
+        font-weight: 500;
+    }
+    
+    @media (max-width: 767px) {
+        .stats-card {
+            min-height: 100px;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 1rem;
+        }
+        
+        .stats-number {
+            font-size: 1.25rem;
+        }
+        
+        .stats-label {
+            font-size: 0.875rem;
+        }
+    }
+    
+    /* For very small screens */
+    @media (max-width: 400px) {
+        .stats-card {
+            min-height: 80px;
+        }
+        
+        .stats-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 0.75rem;
+        }
+        
+        .stats-number {
+            font-size: 1.1rem;
+        }
+        
+        .stats-label {
+            font-size: 0.8rem;
+        }
+    }
+    
+    /* Chart and widget styles */
+    .chart-container {
+        position: relative;
+        width: 100%;
+        margin: 0 auto;
+    }
+    
+    .chart-stats {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .stat-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        background-color: #f8f9fa;
+    }
+    
+    .badge-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    
+    .url-charts-row {
+        margin-bottom: 20px;
+    }
+    
+    @media (max-width: 991px) {
+        .url-chart-card {
+            margin-bottom: 20px;
+        }
+    }
+    
+    /* Football dashboard specific styles */
+    .football-dashboard {
+        background-color: #f5f7fa;
+        background-image: url("{% static 'assets/images/dashboard/pitch-pattern.png' %}");
+        background-size: 300px;
+        background-blend-mode: overlay;
+    }
+    
+    /* Animation utilities */
+    .pulse-animation {
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+</style>
+<div class="page-body">
+    <div class="container-fluid custom-margin mt-5">
+        <div class="page-title">
+            <div class="row">
+                <div class="col-6">
+                    <h3>SafeFin Dashboard</h3>
+                </div>
+                <div class="col-6">
+                </div>
+            </div>
+        </div>
+        <div class="row g-3">
+            <!-- Stat Cards -->
+            <div class="col-6 col-sm-6 col-md-3" >
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="100">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/user.png' %}" alt="Total Users">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">{{ total_users }}</div>
+                        <div class="stats-label">Total Users</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="200">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/mobile_app.png' %}" alt="Mobile Users">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">{{ mobile_users }}</div>
+                        <div class="stats-label">Mobile App Users</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="300">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/sub_admin.png' %}" alt="Sub-Admins">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">{{ sub_admin_users }}</div>
+                        <div class="stats-label">Sub-Admins</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="400">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/subscriptions.png' %}" alt="Total Subscriptions">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">{{ total_subscriptions }}</div>
+                        <div class="stats-label">Total Subscriptions</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="500">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/active_subscription.png' %}" alt="Active Subscriptions">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">{{ active_subscription_users }}</div>
+                        <div class="stats-label">Active Subscriptions</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="600">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/monthly_subscription.png' %}" alt="Monthly Subscriptions">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">{{ monthly_subscriptions }}</div>
+                        <div class="stats-label">Monthly Subscriptions</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="700">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/annual_subscriptions.png' %}" alt="Annual Subscriptions">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">{{ annual_subscriptions }}</div>
+                        <div class="stats-label">Annual Subscriptions</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="800">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/app_ratting.png' %}" alt="App Rating">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">{{ average_rating|default:"0.0"|floatformat:1 }} / 5.0</div>
+                        <div class="stats-label">App Rating</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Add these with your other stat cards -->
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="900">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/revenue.png' %}" alt="Total Revenue">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">SAR {{ total_revenue|floatformat:2 }}</div>
+                        <div class="stats-label">Total Revenue</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="1000">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/monthly_revenue.jpg' %}" alt="Monthly Plan Revenue">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">SAR {{ monthly_revenue|floatformat:2 }}</div>
+                        <div class="stats-label">Monthly Plan Revenue</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-sm-6 col-md-3">
+                <div class="stats-card animate__animated animate__fadeIn" data-delay="1100">
+                    <div class="stats-icon">
+                        <img src="{% static 'assets/images/dashboard/annual_revenue.jpg' %}" alt="Annual Plan Revenue">
+                    </div>
+                    <div class="stats-content">
+                        <div class="stats-number">SAR {{ annual_revenue|floatformat:2 }}</div>
+                        <div class="stats-label">Annual Plan Revenue</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h4 class="mb-4">URL Safety Statistics</h4>
+                <div class="row g-4">
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="border rounded p-3 h-100 shadow-sm">
+                            <h5 class="mb-3">Subscription Status</h5>
+                            <div class="chart-container overflow-auto">
+                                <canvas id="subscriptionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="border rounded p-3 h-100 shadow-sm">
+                            <h5 class="mb-3">Monthly URL Safety Status</h5>
+                            <div class="chart-container mb-3 overflow-auto">
+                                <canvas id="monthlyUrlChart"></canvas>
+                            </div>
+                            <div class="chart-stats">
+                                <div class="stat-badge">
+                                    <span class="badge-dot bg-success"></span>
+                                    Safe URLs: {{ monthly_safe_urls|default:"0" }}
+                                </div>
+                                <div class="stat-badge">
+                                    <span class="badge-dot bg-danger"></span>
+                                    Unsafe URLs: {{ monthly_unsafe_urls|default:"0" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="border rounded p-3 h-100 shadow-sm">
+                            <h5 class="mb-3">All-Time URL Safety Status</h5>
+                            <div class="chart-container mb-3 overflow-auto">
+                                <canvas id="allTimeUrlChart"></canvas>
+                            </div>
+                            <div class="chart-stats">
+                                <div class="stat-badge">
+                                    <span class="badge-dot bg-success"></span>
+                                    Safe URLs: {{ all_time_safe_urls|default:"0" }}
+                                </div>
+                                <div class="stat-badge">
+                                    <span class="badge-dot bg-danger"></span>
+                                    Unsafe URLs: {{ all_time_unsafe_urls|default:"0" }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Add this to your charts section -->
+                    <div class="col-12">
+                        <div class="border rounded p-3 h-100 shadow-sm">
+                            <h5 class="mb-3">Monthly Revenue Breakdown</h5>
+                            <div class="chart-container overflow-auto">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                            <div class="chart-stats">
+                                <div class="stat-badge">
+                                    <span class="badge-dot" style="background-color: #78be20;"></span>
+                                    Monthly Plan Revenue: SAR {{ monthly_revenue|floatformat:2 }}
+                                </div>
+                                <div class="stat-badge">
+                                    <span class="badge-dot" style="background-color: #36a2eb;"></span>
+                                    Annual Plan Revenue: SAR {{ annual_revenue|floatformat:2 }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Reviews -->
+        <div class="row widget-grid mt-4">
+            <div class="col-12">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5>Recent Reviews</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if recent_reviews %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Rating</th>
+                                            <th>Comment</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for review in recent_reviews %}
+                                            <tr>
+                                                <td>
+                                                    {% if review.user %}
+                                                        {{ review.user.name|default:review.user.username }}
+                                                    {% else %}
+                                                        Anonymous
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ review.rating }}/5</td>
+                                                <td>
+                                                    {% if review.review %}
+                                                        {{ review.review|truncatechars:80 }}...
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ review.created_at|date:"M d, Y" }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <p>No recent reviews found</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scriptcontent %}
+<!-- Add script content if needed -->
+{% endblock %}
+
+{% block script %}
+<!-- Chart.js for subscription status chart -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fix for charts not rendering properly in some browsers/devices
+        function resizeCharts() {
+            if (typeof subscriptionChart !== 'undefined') subscriptionChart.resize();
+            if (typeof monthlyUrlChart !== 'undefined') monthlyUrlChart.resize();
+            if (typeof allTimeUrlChart !== 'undefined') allTimeUrlChart.resize();
+        }
+        
+        window.addEventListener('resize', function() {
+            // Debounce resize event
+            clearTimeout(window.resizeTimeout);
+            window.resizeTimeout = setTimeout(resizeCharts, 200);
+        });
+        
+        // Subscription Status Chart
+        const ctx = document.getElementById('subscriptionChart').getContext('2d');
+        const subscriptionChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Active', 'Expired', 'Cancelled', 'Pending', 'Renewed', 'Upgraded'],
+                datasets: [{
+                    data: [
+                        {{ active_subscriptions|default:"0" }},
+                        {{ expired_subscriptions|default:"0" }},
+                        {{ cancelled_subscriptions|default:"0" }},
+                        {{ pending_subscriptions|default:"0" }},
+                        {{ renewed_subscriptions|default:"0" }},
+                        {{ upgraded_subscriptions|default:"0" }}
+                    ],
+                    backgroundColor: [
+                        '#78be20',
+                        '#ff6384',
+                        '#ffcd56',
+                        '#36a2eb',
+                        '#ff9f40',
+                        '#4bc0c0'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Monthly URL Line Chart
+        const monthlyUrlCtx = document.getElementById('monthlyUrlChart').getContext('2d');
+        const monthLabels = {{ monthly_url_data.months|safe|default:"[]" }};
+        const safeData = {{ monthly_url_data.safe_counts|default:"[]" }};
+        const unsafeData = {{ monthly_url_data.unsafe_counts|default:"[]" }};
+        
+        const monthlyUrlChart = new Chart(monthlyUrlCtx, {
+            type: 'line',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Safe URLs',
+                        data: safeData,
+                        borderColor: '#78be20',
+                        backgroundColor: 'rgba(120, 190, 32, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#78be20',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Unsafe URLs',
+                        data: unsafeData,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: '#dc3545',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            precision: 0
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // All-Time URL Pie Chart
+        const allTimeUrlCtx = document.getElementById('allTimeUrlChart').getContext('2d');
+        const allTimeUrlChart = new Chart(allTimeUrlCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Safe URLs', 'Unsafe URLs'],
+                datasets: [{
+                    data: [
+                        {{ all_time_safe_urls|default:"0" }}, 
+                        {{ all_time_unsafe_urls|default:"0" }}
+                    ],
+                    backgroundColor: [
+                        '#78be20',
+                        '#dc3545'
+                    ],
+                    borderWidth: 1,
+                    hoverOffset: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Monthly Revenue Bar Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ revenue_months|safe }},
+                datasets: [
+                    {
+                        label: 'Monthly Plan Revenue',
+                        data: {{ monthly_plan_revenues|safe }},
+                        backgroundColor: 'rgba(120, 190, 32, 0.7)',
+                        borderColor: 'rgba(120, 190, 32, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Annual Plan Revenue',
+                        data: {{ annual_plan_revenues|safe }},
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Revenue (SAR)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return 'SAR ' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom'  // Move the clickable labels below the chart
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += 'SAR ' + context.raw.toLocaleString();
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Add revenueChart to your resize function
+        function resizeCharts() {
+            if (typeof subscriptionChart !== 'undefined') subscriptionChart.resize();
+            if (typeof monthlyUrlChart !== 'undefined') monthlyUrlChart.resize();
+            if (typeof allTimeUrlChart !== 'undefined') allTimeUrlChart.resize();
+            if (typeof revenueChart !== 'undefined') revenueChart.resize();
+        }
+        
+        // Adjust layout on tab change or accordion expansion
+        const mutationObserver = new MutationObserver(function(mutations) {
+            setTimeout(resizeCharts, 100);
+        });
+        
+        // Start observing the document body for attribute changes
+        mutationObserver.observe(document.body, { 
+            attributes: true, 
+            subtree: true, 
+            attributeFilter: ['class', 'style'] 
+        });
+    });
+</script>
+{% endblock %}

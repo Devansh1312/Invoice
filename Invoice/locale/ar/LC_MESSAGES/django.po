@@ -1,0 +1,462 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+
+msgid "FAQ retrieved successfully."
+msgstr "تم استرداد الأسئلة الشائعة بنجاح."
+
+msgid "All fields are required."
+msgstr "جميع الحقول مطلوبة."
+
+msgid "Invalid email format."
+msgstr "تنسيق البريد الإلكتروني غير صالح."
+
+msgid "Email already in use."
+msgstr "البريد الإلكتروني مستخدم بالفعل."
+
+msgid "Phone number already in use."
+msgstr "رقم الهاتف مستخدم بالفعل."
+
+msgid "Your Verification OTP"
+msgstr "رمز التحقق الخاص بك"
+
+msgid "Failed to send OTP email."
+msgstr "فشل إرسال رسالة رمز التحقق."
+
+msgid "OTP sent successfully."
+msgstr "تم إرسال رمز التحقق بنجاح."
+
+msgid "Email is required."
+msgstr "البريد الإلكتروني مطلوب."
+
+msgid "Invalid registration type."
+msgstr "نوع التسجيل غير صالح."
+
+msgid "An error occurred during registration."
+msgstr "حدث خطأ أثناء التسجيل."
+
+msgid "Email and OTP are required."
+msgstr "البريد الإلكتروني ورمز التحقق مطلوبان."
+
+msgid "Invalid OTP or email."
+msgstr "رمز التحقق أو البريد الإلكتروني غير صالح."
+
+msgid "Registration successful."
+msgstr "تم التسجيل بنجاح."
+
+msgid "Email and password are required."
+msgstr "البريد الإلكتروني وكلمة المرور مطلوبان."
+
+msgid "Invalid credentials."
+msgstr "بيانات الاعتماد غير صالحة."
+
+msgid "Account is not active."
+msgstr "الحساب غير نشط."
+
+msgid "Login successful."
+msgstr "تم تسجيل الدخول بنجاح."
+
+msgid "Email not registered."
+msgstr "البريد الإلكتروني غير مسجل."
+
+msgid "Invalid login type."
+msgstr "نوع تسجيل الدخول غير صالح."
+
+msgid "An error occurred during login."
+msgstr "حدث خطأ أثناء تسجيل الدخول."
+
+msgid "Refresh token is required."
+msgstr "رمز التحديث مطلوب."
+
+msgid "Successfully logged out."
+msgstr "تم تسجيل الخروج بنجاح."
+
+msgid "Error during logout."
+msgstr "حدث خطأ أثناء تسجيل الخروج."
+
+msgid "Reasons fetched successfully."
+msgstr "تم جلب الأسباب بنجاح."
+
+msgid "Invalid deletion reason ID. It must be an integer."
+msgstr "معرف سبب الحذف غير صالح. يجب أن يكون رقماً صحيحاً."
+
+msgid "Invalid deletion reason ID."
+msgstr "معرف سبب الحذف غير صالح."
+
+msgid "Your account has been deleted successfully."
+msgstr "تم حذف حسابك بنجاح."
+
+msgid "Profile retrieved successfully."
+msgstr "تم استرداد الملف الشخصي بنجاح."
+
+msgid "An error occurred while retrieving profile."
+msgstr "حدث خطأ أثناء استرداد الملف الشخصي."
+
+msgid "The following fields are required: %s"
+msgstr "الحقول التالية مطلوبة: %s"
+
+msgid "This email is already registered with another account."
+msgstr "هذا البريد الإلكتروني مسجل بالفعل بحساب آخر."
+
+msgid "Profile updated successfully."
+msgstr "تم تحديث الملف الشخصي بنجاح."
+
+msgid "An error occurred while updating profile."
+msgstr "حدث خطأ أثناء تحديث الملف الشخصي."
+
+msgid "No profile picture provided."
+msgstr "لم يتم توفير صورة للملف الشخصي."
+
+msgid "Profile Picture updated successfully."
+msgstr "تم تحديث صورة الملف الشخصي بنجاح."
+
+msgid "Old password is incorrect."
+msgstr "كلمة المرور القديمة غير صحيحة."
+
+msgid "New password must be at least 8 characters long."
+msgstr "يجب أن تتكون كلمة المرور الجديدة من 8 أحرف على الأقل."
+
+msgid "Password changed successfully."
+msgstr "تم تغيير كلمة المرور بنجاح."
+
+msgid "Email address is required."
+msgstr "عنوان البريد الإلكتروني مطلوب."
+
+msgid "System configuration error. Please contact support."
+msgstr "خطأ في تكوين النظام. يرجى الاتصال بالدعم."
+
+msgid "Your Reset Password Verification Code"
+msgstr "رمز التحقق لإعادة تعيين كلمة المرور الخاص بك"
+
+msgid "We encountered an issue while sending your OTP email. Please try again."
+msgstr "واجهنا مشكلة أثناء إرسال رسالة رمز التحقق. يرجى المحاولة مرة أخرى."
+
+msgid "A verification code has been sent to your email address. Please check your inbox."
+msgstr "تم إرسال رمز تحقق إلى عنوان بريدك الإلكتروني. يرجى التحقق من صندوق الوارد."
+
+msgid "We were unable to send the verification email. Please try again later."
+msgstr "تعذر إرسال رسالة التحقق. يرجى المحاولة مرة أخرى لاحقاً."
+
+msgid "No registered account found with this email address."
+msgstr "لم يتم العثور على حساب مسجل بهذا العنوان الإلكتروني."
+
+msgid "Both email and OTP are required."
+msgstr "كل من البريد الإلكتروني ورمز التحقق مطلوبان."
+
+msgid "No OTP generated for this email."
+msgstr "لم يتم إنشاء رمز تحقق لهذا البريد الإلكتروني."
+
+msgid "Invalid OTP."
+msgstr "رمز تحقق غير صالح."
+
+msgid "OTP has expired. Please request a new one."
+msgstr "انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد."
+
+msgid "OTP verified successfully."
+msgstr "تم التحقق من رمز التحقق بنجاح."
+
+msgid "No user found with this email."
+msgstr "لم يتم العثور على مستخدم بهذا البريد الإلكتروني."
+
+msgid "Email, OTP and new password are all required."
+msgstr "البريد الإلكتروني ورمز التحقق وكلمة المرور الجديدة كلها مطلوبة."
+
+msgid "Password has been reset successfully."
+msgstr "تم إعادة تعيين كلمة المرور بنجاح."
+
+msgid "Invalid or missing current_language. It must be either \"en\" or \"ar\"."
+msgstr "اللغة الحالية غير صالحة أو مفقودة. يجب أن تكون \"en\" أو \"ar\"."
+
+msgid "Current language updated successfully."
+msgstr "تم تحديث اللغة الحالية بنجاح."
+
+msgid "Invalid value for notification preference. Use 0 (off) or 1 (on)."
+msgstr "قيمة غير صالحة لتفضيل الإشعارات. استخدم 0 (إيقاف) أو 1 (تشغيل)."
+
+msgid "Notification preference updated successfully."
+msgstr "تم تحديث تفضيل الإشعارات بنجاح."
+
+msgid "Failed to update notification preference."
+msgstr "فشل تحديث تفضيل الإشعارات."
+
+msgid "AppLike Feature Dropdown retrieved successfully."
+msgstr "تم استرداد قائمة ميزات التطبيق بنجاح."
+
+msgid "Rating is required."
+msgstr "التقييم مطلوب."
+
+msgid "Rating must be between 1 and 5."
+msgstr "يجب أن يكون التقييم بين 1 و 5."
+
+msgid "Invalid rating format."
+msgstr "تنسيق تقييم غير صالح."
+
+msgid "Invalid app features selected: %s"
+msgstr "ميزات تطبيق غير صالحة محددة: %s"
+
+msgid "Invalid app features format."
+msgstr "تنسيق ميزات التطبيق غير صالح."
+
+msgid "Review submitted successfully."
+msgstr "تم إرسال المراجعة بنجاح."
+
+msgid "Failed to submit review."
+msgstr "فشل إرسال المراجعة."
+
+msgid "Subscription plans retrieved successfully."
+msgstr "تم استرداد خطط الاشتراك بنجاح."
+
+msgid "Invalid subscription plan."
+msgstr "خطة اشتراك غير صالحة."
+
+msgid "Subscription purchased successfully."
+msgstr "تم شراء الاشتراك بنجاح."
+
+msgid "Subscription renewed successfully."
+msgstr "تم تجديد الاشتراك بنجاح."
+
+msgid "Subscription upgraded successfully."
+msgstr "تم ترقية الاشتراك بنجاح."
+
+msgid "No active subscription found."
+msgstr "لم يتم العثور على اشتراك نشط."
+
+msgid "Active subscription retrieved successfully."
+msgstr "تم استرداد الاشتراك النشط بنجاح."
+
+msgid "Chat messages retrieved successfully."
+msgstr "تم استرداد رسائل الدردشة بنجاح."
+
+msgid "No chat session found."
+msgstr "لم يتم العثور على جلسة دردشة."
+
+msgid "Message content is required."
+msgstr "محتوى الرسالة مطلوب."
+
+msgid "Message sent to admin successfully."
+msgstr "تم إرسال الرسالة إلى المسؤول بنجاح."
+
+# General API Messages
+msgid "URL is required."
+msgstr "الرابط مطلوب."
+
+msgid "Invalid URL format."
+msgstr "تنسيق الرابط غير صالح."
+
+msgid "URL has already been checked (cached results)."
+msgstr "تم التحقق من الرابط مسبقًا (النتائج مخزنة مؤقتًا)."
+
+msgid "You have used all allowed URLs in your subscription. Please upgrade your plan."
+msgstr "لقد استخدمت جميع الروابط المسموح بها في اشتراكك. يرجى ترقية خطتك."
+
+msgid "You have used all free URL checks. Please subscribe to continue."
+msgstr "لقد استخدمت جميع فحوصات الروابط المجانية. يرجى الاشتراك للمتابعة."
+
+msgid "Safe Browsing API key is not configured."
+msgstr "مفتاح واجهة برمجة التطبيقات لتصفح الآمن غير مُهيأ."
+
+msgid "URL checked successfully."
+msgstr "تم التحقق من الرابط بنجاح."
+
+msgid "An error occurred while checking the URL."
+msgstr "حدث خطأ أثناء التحقق من الرابط."
+
+# SSL Status Messages
+msgid "Secure"
+msgstr "آمن"
+
+msgid "Moderate"
+msgstr "متوسط"
+
+msgid "Unsecured"
+msgstr "غير آمن"
+
+msgid "Error"
+msgstr "خطأ"
+
+msgid "SSL connection failed"
+msgstr "فشل الاتصال بشهادة SSL"
+
+# SSL Validity Messages
+msgid "Valid"
+msgstr "صالح"
+
+msgid "Invalid"
+msgstr "غير صالح"
+
+msgid "Unknown"
+msgstr "غير معروف"
+
+# Recommendation Messages
+msgid "Safe to Use."
+msgstr "آمن للاستخدام."
+
+msgid "Moderate Risk"
+msgstr "مخاطرة متوسطة"
+
+msgid "Dangerous to Use."
+msgstr "خطر للاستخدام."
+
+# Domain History Messages
+msgid "Very new domain (less than 30 days old). Exercise caution."
+msgstr "نطاق جديد جدًا (أقل من 30 يومًا). يُرجى توخي الحذر."
+
+msgid "Relatively new domain (less than 90 days old). Some caution advised."
+msgstr "نطاق جديد نسبيًا (أقل من 90 يومًا). يُنصح ببعض الحذر."
+
+msgid "Domain has been registered for less than a year."
+msgstr "تم تسجيل النطاق منذ أقل من عام."
+
+msgid "Well-established domain (registered for %s years)."
+msgstr "نطاق موثوق (مسجل منذ %s سنوات)."
+
+msgid "Well-established domain (registered for 1 year)."
+msgstr "نطاق موثوق (مسجل منذ سنة واحدة)."
+
+msgid "Well-established domain."
+msgstr "نطاق موثوق."
+
+msgid "No historical data available"
+msgstr "لا توجد بيانات تاريخية متاحة"
+
+# Threat Detection Messages
+msgid "Security threats detected by Google Safe Browsing"
+msgstr "تم اكتشاف تهديدات أمنية بواسطة Google Safe Browsing"
+
+msgid "Invalid or missing SSL certificate"
+msgstr "شهادة SSL غير صالحة أو مفقودة"
+
+msgid "SSL verification issues"
+msgstr "مشاكل في التحقق من شهادة SSL"
+
+msgid "SSL certificate expiring very soon (%s days)"
+msgstr "ستنتهي صلاحية شهادة SSL قريبًا جدًا (%s يومًا)"
+
+msgid "SSL certificate expiring within a month (%s days)"
+msgstr "ستنتهي صلاحية شهادة SSL خلال شهر (%s يومًا)"
+
+msgid "Very new domain (less than 30 days old)"
+msgstr "نطاق جديد جدًا (أقل من 30 يومًا)"
+
+msgid "Relatively new domain (less than 90 days old)"
+msgstr "نطاق جديد نسبيًا (أقل من 90 يومًا)"
+
+msgid "Well-established domain with valid security"
+msgstr "نطاق موثوق بأمان صالح"
+
+msgid "Valid SSL certificate"
+msgstr "شهادة SSL صالحة"
+
+msgid "Mixed security signals"
+msgstr "إشارات أمان مختلطة"
+
+# Risk Factor Messages
+msgid "URL contains IP address instead of domain name"
+msgstr "يحتوي الرابط على عنوان IP بدلاً من اسم نطاق"
+
+msgid "Unusually long domain name"
+msgstr "اسم نطاق طويل بشكل غير معتاد"
+
+msgid "URL contains potential phishing patterns"
+msgstr "يحتوي الرابط على أنماط تصيد احتيالي محتملة"
+
+msgid "Unusual number of subdomains (%s)"
+msgstr "عدد غير معتاد من النطاقات الفرعية (%s)"
+
+msgid "Domain uses potentially suspicious TLD"
+msgstr "يستخدم النطاق لاحقة نطاق مشبوهة محتملة"
+
+# API Response Status Messages
+msgid "Unknown (API error)"
+msgstr "غير معروف (خطأ في واجهة برمجة التطبيقات)"
+
+# Known Threats Status
+msgid "Safe"
+msgstr "آمن"
+
+msgid "Unsafe"
+msgstr "غير آمن"
+
+msgid "Dangerous to Use - Possible Phishing Site"
+msgstr "خطر للاستخدام - موقع تصيد احتيالي محتمل"
+
+msgid "URL Marked as Safe."
+msgstr "تم تصنيف الرابط على أنه آمن."
+
+msgid "URL Marked as Unsafe."
+msgstr "تم تصنيف الرابط على أنه غير آمن."
+
+msgid "Invalid action. Use 1 for safe and 0 for unsafe."
+msgstr "إجراء غير صالح. استخدم 1 للآمن و0 لغير الآمن."
+
+msgid "URL record not found."
+msgstr "لم يتم العثور على سجل الرابط."
+
+msgid "An error occurred while updating the URL record."
+msgstr "حدث خطأ أثناء تحديث سجل الرابط."
+
+msgid "URL statistics retrieved successfully"
+msgstr "تم جلب إحصائيات الرابط بنجاح."
+
+msgid "An error occurred while fetching URL statistics"
+msgstr "حدث خطأ أثناء جلب إحصائيات الرابط."
+
+msgid "Invalid type. Use 1 for safe and 0 for unsafe."
+msgstr "نوع غير صالح. استخدم 1 للآمن و0 لغير الآمن."
+
+msgid "No information available"
+msgstr "لا توجد معلومات متاحة."
+
+msgid "No recommendation"
+msgstr "لا توجد توصية."
+
+msgid "An error occurred while fetching URL history"
+msgstr "حدث خطأ أثناء جلب سجل الرابط."
+
+msgid "An error occurred while fetching notification history"
+msgstr "حدث خطأ أثناء جلب سجل الإشعارات."
+
+msgid "Notification deleted successfully"
+msgstr "تم حذف الإشعار بنجاح."
+
+msgid "Notification not found"
+msgstr "لم يتم العثور على الإشعار."
+
+msgid "An error occurred while deleting the notification"
+msgstr "حدث خطأ أثناء حذف الإشعار."
+
+msgid "All notifications deleted successfully"
+msgstr "تم حذف جميع الإشعارات بنجاح."
+
+msgid "An error occurred while deleting the notifications"
+msgstr "حدث خطأ أثناء حذف الإشعارات."
+
+msgid "Password Reset Verification Code"
+msgstr "رمز التحقق لإعادة تعيين كلمة المرور"
+
+msgid "Your password reset verification code is: %(otp)s"
+msgstr "رمز التحقق لإعادة تعيين كلمة المرور الخاصة بك هو: %(otp)s"
+
+msgid "Failed to send password reset verification email."
+msgstr "فشل إرسال رسالة تحقق لإعادة تعيين كلمة المرور."
+
+msgid "Password reset verification email sent successfully."
+msgstr "تم إرسال رسالة تحقق لإعادة تعيين كلمة المرور بنجاح."
+
+msgid "Valid (Expiring Soon)"
+msgstr "صالح (ستنتهي قريبا)"
+
+msgid "Free URL checks are not available for users who previously had subscriptions. Please renew your subscription."
+msgstr "لا تتوفر فحوصات روابط مجانية للمستخدمين الذين كانوا قد امتلكوا اشتراكات سابقة. يرجى تجديد اشتراكك."
+
+msgid "You have used all free URL checks. Please subscribe to continue."
+msgstr "لقد استخدمت جميع فحوصات الروابط المجانية. يرجى الاشتراك للمتابعة."

@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+{% load sass_tags %}
+
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<!-- Plugins css Ends-->
+{% endblock %}
+<style>
+   .is-invalid {
+   border-color: #dc3545;
+   background-color: #f8d7da;
+}
+</style>
+
+{% block title %}
+Country Management
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+   <div class="container-fluid">
+      <div class="page-title">
+         <div class="row">
+            <div class="col-12 col-md-6">
+               <h3>{{breadcrumb.child}}</h3>
+            </div>
+            <div class="col-12 col-md-6">
+               <ol class="breadcrumb">
+                  <button class="btn btn-pill btn-outline-primary-2x ml-auto" data-bs-toggle="modal" data-bs-target="#addCountryModal">Add Country</button>
+               </ol>
+            </div>
+         </div>
+      </div>
+      <div class="row">
+         <!-- Country List -->
+         <div class="col-sm-12">
+            <div class="card">
+               <div class="card-body">
+                  <div class="table-responsive">
+                     <table class="display" id="basic-1">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Flag</th>
+                                <th>Name (English)</th>
+                                <th>Name (Arabic)</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for country_item in country %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    {% if country_item.flag %}
+                                        <img src="{{ country_item.flag.url }}" alt="{{ country_item.name_en }}" width="50" height="auto">
+                                    {% else %}
+                                        No flag
+                                    {% endif %}
+                                </td>                                 
+                                <td>{{ country_item.name_en }}</td>
+                                <td>{{ country_item.name_ar }}</td>
+                                <td>
+                                    <span class="status-badge" style="color: {% if country_item.status %}green{% else %}red{% endif %};">
+                                      {% if country_item.status %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <!-- Action buttons -->
+                                    <div class="action-menu-container" style="position: relative; display: inline-block;">
+                                        <a href="#" class="three-dots-menu" onclick="toggleMenu(this)">
+                                            <i data-feather="more-vertical"></i>
+                                        </a>
+                                        <div class="action-card" style="display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); z-index: 10; width: auto;">
+                                          <ul style="list-style: none; padding: 0; margin: 0;">                                           
+                                             <li style="padding: 8px 12px;">
+                                                <a style="font-size: small;" href="#" data-bs-toggle="modal" data-bs-target="#editCountryModal" 
+                                                data-country-id="{{ country_item.id }}" 
+                                                data-country-name_en="{{ country_item.name_en }}" 
+                                                data-country-name_ar="{{ country_item.name_ar }}" 
+                                                data-country-flag="{% if country_item.flag %}{{ country_item.flag.url }}{% endif %}"
+                                                data-country-status="{{ country_item.status }}">
+                                                   Edit </a>
+                                             </li>
+                                          </ul>
+                                       </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>                        
+                     </table>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Add Country Modal -->
+<div class="modal fade" id="addCountryModal" tabindex="-1" aria-labelledby="addCountryModalLabel" aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title" id="addCountryModalLabel">Add Country</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+         </div>
+         <div class="modal-body">
+            <form method="post" action="{% url 'country_create' %}" id="addCountryForm" enctype="multipart/form-data">
+               {% csrf_token %}
+               <div class="row">
+                  <div class="col-12 col-sm-6 mb-3">
+                     <label for="name_en" class="form-label">Name (English)</label>
+                     <input type="text" class="form-control" id="name_en" name="name_en" placeholder="Enter Country Name">
+                     <div class="invalid-feedback" id="name_en-error"></div>
+                  </div>
+                  <div class="col-12 col-sm-6 mb-3">
+                     <label for="name_ar" class="form-label">Name (Arabic)</label>
+                     <input type="text" class="form-control" id="name_ar" name="name_ar" placeholder="Enter Country Name">
+                     <div class="invalid-feedback" id="name_ar-error"></div>
+                  </div>
+                  <div class="col-12 col-sm-6 mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select class="form-control" id="status" name="status">
+                       <option value="1">Active</option>
+                       <option value="0">Inactive</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-sm-6 mb-3">
+                     <label for="flag" class="form-label">Country Flag</label>
+                     <input type="file" class="form-control" id="flag" name="flag" accept="image/jpeg, image/png, image/gif">
+                     <div class="invalid-feedback" id="flag-error"></div>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Add Country</button>
+               </div>
+            </form>            
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Edit Country Modal -->
+<div class="modal fade" id="editCountryModal" tabindex="-1" aria-labelledby="editCountryModalLabel" aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+         <div class="modal-header">
+            <h5 class="modal-title" id="editCountryModalLabel">Edit Country</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+         </div>
+         <div class="modal-body">
+            <form method="post" id="editCountryForm" enctype="multipart/form-data">
+               {% csrf_token %}
+               <div class="row">
+                  <input type="hidden" id="editCountryId" name="id">
+                  <div class="col-12 col-sm-6 mb-3">
+                     <label for="editName_en" class="form-label">Name (English)</label>
+                     <input type="text" class="form-control" id="editName_en" name="title_en" placeholder="Enter Country Name">
+                     <div class="invalid-feedback" id="edit-name_en-error"></div>
+                  </div>
+                  <div class="col-12 col-sm-6 mb-3">
+                     <label for="editName_ar" class="form-label">Name (Arabic)</label>
+                     <input type="text" class="form-control" id="editName_ar" name="title_ar" placeholder="Enter Country Name">
+                     <div class="invalid-feedback" id="edit-name_ar-error"></div>
+                  </div>
+                  <div class="col-12 col-sm-6 mb-3">
+                    <label for="editStatus" class="form-label">Status</label>
+                    <select class="form-control" id="editStatus" name="status">
+                       <option value="1">Active</option>
+                       <option value="0">Inactive</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-sm-6 mb-3">
+                     <label for="editFlag" class="form-label">Country Flag</label>
+                     <input type="file" class="form-control" id="editFlag" name="flag" accept="image/jpeg, image/png, image/gif">
+                     <img id="editCountryFlagPreview" style="max-width: 100px; margin-top: 10px; display: none;">
+                  </div>
+                  <button type="submit" class="btn btn-primary">Update Country</button>
+               </div>
+            </form>            
+         </div>
+      </div>
+   </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js'%}"></script>
+<script src="{% static 'assets/js/datatable/datatables/datatable.custom.js'%}"></script>
+<script src="{% static 'assets/js/tooltip-init.js'%}"></script>
+<!-- Plugins JS Ends-->
+<script>
+   document.addEventListener('DOMContentLoaded', function() {
+    // Edit Country Modal
+    var editCountryModal = document.getElementById('editCountryModal');
+    if (editCountryModal) {
+        editCountryModal.addEventListener('show.bs.modal', function(event) {
+            var button = event.relatedTarget;
+            var countryId = button.getAttribute('data-country-id');
+            var countryNameEn = button.getAttribute('data-country-name_en');
+            var countryNameAr = button.getAttribute('data-country-name_ar');
+            var countryFlagUrl = button.getAttribute('data-country-flag');
+            var countryStatus = button.getAttribute('data-country-status');
+
+
+            var form = document.getElementById('editCountryForm');
+            form.action = "{% url 'country_edit' 0 %}".replace('0', countryId);
+
+            form.querySelector('#editCountryId').value = countryId;
+            form.querySelector('#editName_en').value = countryNameEn;
+            form.querySelector('#editName_ar').value = countryNameAr;
+            form.querySelector('#editStatus').value = countryStatus === 'True' ? '1' : '0';
+
+            var flagPreview = document.getElementById('editCountryFlagPreview');
+            if (countryFlagUrl && countryFlagUrl !== 'None') {
+                flagPreview.src = countryFlagUrl;
+                flagPreview.style.display = 'block';
+            } else {
+                flagPreview.style.display = 'none';
+            }
+        });
+    }
+
+    // Toggle the visibility of the action card
+    document.querySelectorAll('.three-dots-menu').forEach(function(menu) {
+        menu.addEventListener('click', function(event) {
+            event.preventDefault();
+            var actionCard = menu.nextElementSibling;
+            actionCard.style.display = (actionCard.style.display === 'none' || actionCard.style.display === '') ? 'block' : 'none';
+            // Close other open action cards
+            document.querySelectorAll('.action-card').forEach(function(card) {
+                if (card !== actionCard) {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Hide action card if clicking outside
+    document.addEventListener('click', function(event) {
+        var isClickInside = event.target.closest('.action-menu-container');
+        if (!isClickInside) {
+            document.querySelectorAll('.action-card').forEach(function(card) {
+                card.style.display = 'none';
+            });
+        }
+    });
+
+    // Form Validation of add and edit
+    function validateForm(form) {
+        let isValid = true;
+
+        $(form).find('input[type="text"], input[type="file"]').each(function () {
+            const $this = $(this);
+            const errorMessageId = $this.attr('id') + '-error';
+            const $errorMessage = $('#' + errorMessageId);
+
+            if ($this.attr('type') === 'file') {
+                // Validate file input only for add form
+                if (form.id === 'addCountryForm') {
+                    const file = $this[0].files[0];
+                    if (!file) {
+                        $this.addClass('is-invalid');
+                        $errorMessage.text('Please select a flag.').css('color', 'red');
+                        isValid = false;
+                    } else {
+                        // List of valid image MIME types
+                        const validImageTypes = [
+                            'image/jpeg',  // .jpg, .jpeg
+                            'image/png',   // .png
+                            'image/gif',   // .gif
+                            'image/bmp',   // .bmp
+                            'image/webp',  // .webp
+                            'image/tiff',  // .tif, .tiff
+                            'image/svg+xml', // .svg
+                            'image/x-icon', // .ico
+                        ];
+
+                        if (!validImageTypes.includes(file.type)) {
+                            $this.addClass('is-invalid');
+                            $errorMessage.text('Allowed image types: JPG, PNG, GIF, BMP, WEBP, TIFF, SVG, ICO.').css('color', 'red');
+                            isValid = false;
+                        } else {
+                            $this.removeClass('is-invalid');
+                            $errorMessage.text('');
+                        }
+                    }
+                }
+            } else {
+                // Validate text inputs
+                if ($this.val().trim() === '') {
+                    $this.addClass('is-invalid');
+                    $errorMessage.text('This field is required.').css('color', 'red');
+                    isValid = false;
+                } else {
+                    $this.removeClass('is-invalid');
+                    $errorMessage.text('');
+                }
+            }
+        });
+
+        return isValid;
+    }
+
+    // Bind validation to forms
+    $('#addCountryForm').on('submit', function (e) {
+        if (!validateForm(this)) {
+            e.preventDefault();
+        }
+    });
+
+    $('#editCountryForm').on('submit', function (e) {
+        if (!validateForm(this)) {
+            e.preventDefault();
+        }
+    });
+
+    // Reset invalid class and error message on input change
+    $('#addCountryForm, #editCountryForm').find('input[type="text"], input[type="file"]').on('input change', function () {
+        $(this).removeClass('is-invalid');
+        $('#' + $(this).attr('id') + '-error').text('');
+    });
+});
+</script>
+{% endblock %}

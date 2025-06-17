@@ -1,0 +1,315 @@
+{% extends 'base.html' %} 
+{% load custom_filters %} 
+{% load static %} 
+{% load sass_tags %} 
+{% load permission_tags %}
+
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<!-- Plugins css Ends--> 
+{% endblock %} 
+
+<style>
+    .is-invalid {
+        border-color: #dc3545;
+        background-color: #f8d7da;
+    }
+</style> 
+
+{% block title %}Role Management{% endblock %} 
+
+{% block content %} 
+<div class="page-body">
+    <div class="container-fluid">
+        <div class="page-title">
+            <div class="row">
+                <div class="col-6">
+                    <h3>{{breadcrumb.child}}</h3>
+                </div>
+                <div class="col-6">
+                    <ol class="breadcrumb">
+                        <button class="btn btn-pill btn-outline-primary-2x ml-auto" data-bs-toggle="modal" data-bs-target="#addRoleModal">Add Role</button>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <!-- Role List -->
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="display" id="basic-1">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name (English)</th>
+                                        <th>Name (Arabic)</th>
+                                        <th>Created At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody> 
+                                    {% for role in roles %} 
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ role.name_en }}</td>
+                                        <td>{{ role.name_ar|default:"-" }}</td>
+                                        <td>{{ role.created_at|date:"Y-m-d H:i" }}</td>
+                                        <td>
+                                            <div class="action-menu-container" style="position: relative; display: inline-block;">
+                                                <a href="#" class="three-dots-menu" onclick="toggleMenu(this)">
+                                                    <i data-feather="more-vertical"></i>
+                                                </a>
+                                                <div class="action-card" style="
+                                                    display: none;
+                                                    position: absolute;
+                                                    top: 100%;
+                                                    right: 0;
+                                                    background: #fff;
+                                                    border: 1px solid #ccc;
+                                                    border-radius: 4px;
+                                                    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+                                                    z-index: 10;
+                                                    width: auto;
+                                                ">
+                                                    <ul style="list-style: none; padding: 0; margin: 0;">
+                                                        <li style="padding: 8px 12px;">
+                                                            <a style="font-size: small" href="#" data-bs-toggle="modal" data-bs-target="#editRoleModal" 
+                                                            data-role-id="{{ role.id }}" 
+                                                            data-role-name_en="{{ role.name_en }}" 
+                                                            data-role-name_ar="{{ role.name_ar }}"> Edit </a>
+                                                        </li>
+                                                        {% if request.user|has_permission:'role_permissions' %}
+                                                        <li style="padding: 8px 12px;">
+                                                            <a style="font-size: small" href="{% url 'role_permissions' role.id %}">Permissions</a>
+                                                        </li>
+                                                        {% endif %}
+                                                        <!-- <li style="padding: 8px 12px;">
+                                                            <a style="font-size: small;" href="#" data-bs-toggle="modal" data-bs-target="#deleteRoleModal" data-role-id="{{ role.id }}">
+                                                            Delete </a>
+                                                        </li> -->
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr> 
+                                    {% endfor %} 
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add Role Modal -->
+        <div class="modal fade" id="addRoleModal" tabindex="-1" aria-labelledby="addRoleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addRoleModalLabel">Add Role</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" action="{% url 'role_create' %}" id="addRoleForm"> 
+                            {% csrf_token %} 
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name_en" class="form-label">Name (English)*</label>
+                                    <input type="text" class="form-control" id="name_en" name="name_en">
+                                    <div class="invalid-feedback" id="name_en-error"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="name_ar" class="form-label">Name (Arabic)</label>
+                                    <input type="text" class="form-control" id="name_ar" name="name_ar">
+                                    <div class="invalid-feedback" id="name_ar-error"></div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Add Role</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Role Modal -->
+        <div class="modal fade" id="editRoleModal" tabindex="-1" aria-labelledby="editRoleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editRoleModalLabel">Edit Role</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" id="editRoleForm"> 
+                            {% csrf_token %} 
+                            <div class="row">
+                                <input type="hidden" id="roleId" name="id" />
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_name_en" class="form-label">Name (English)*</label>
+                                    <input type="text" class="form-control" id="edit_name_en" name="name_en">
+                                    <div class="invalid-feedback" id="edit_name_en-error"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_name_ar" class="form-label">Name (Arabic)</label>
+                                    <input type="text" class="form-control" id="edit_name_ar" name="name_ar">
+                                    <div class="invalid-feedback" id="edit_name_ar-error"></div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Update Role</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> 
+</div>
+<!-- Delete Role Modal -->
+<div class="modal fade" id="deleteRoleModal" tabindex="-1" aria-labelledby="deleteRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteRoleModalLabel">Delete Role</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" action="" id="deleteRoleForm">
+            {% csrf_token %}
+            <input type="hidden" id="role_id" name="id">
+            <p>Are you sure you want to delete this role?</p>
+            <button type="submit" class="btn btn-danger">Delete Role</button>
+          </form>
+        </div>
+      </div>
+    </div>
+</div>
+  
+{% endblock %} 
+
+{% block script %} 
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js'%}"></script>
+<script src="{% static 'assets/js/datatable/datatables/datatable.custom.js'%}"></script>
+<script src="{% static 'assets/js/tooltip-init.js'%}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Edit Role Modal
+        var editRoleModal = document.getElementById("editRoleModal");
+        if (editRoleModal) {
+            editRoleModal.addEventListener("show.bs.modal", function(event) {
+                var button = event.relatedTarget;
+                var roleId = button.getAttribute("data-role-id");
+                var name_en = button.getAttribute("data-role-name_en");
+                var name_ar = button.getAttribute("data-role-name_ar");
+
+                var form = document.getElementById("editRoleForm");
+                form.action = "{% url 'role_edit' 0 %}".replace("0", roleId);
+                form.querySelector("#roleId").value = roleId;
+                form.querySelector("#edit_name_en").value = name_en || "";
+                form.querySelector("#edit_name_ar").value = name_ar || "";
+            });
+        }
+
+        // Toggle the visibility of the action card
+        document.querySelectorAll(".three-dots-menu").forEach(function(menu) {
+            menu.addEventListener("click", function(event) {
+                event.preventDefault();
+                var actionCard = menu.nextElementSibling;
+                actionCard.style.display = actionCard.style.display === "none" || actionCard.style.display === "" ? "block" : "none";
+                // Close other open action cards
+                document.querySelectorAll(".action-card").forEach(function(card) {
+                    if (card !== actionCard) {
+                        card.style.display = "none";
+                    }
+                });
+            });
+        });
+
+        // Delete Role Modal
+        var deleteRoleModal = document.getElementById('deleteRoleModal');
+        if (deleteRoleModal) {
+            deleteRoleModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var roleID = button.getAttribute('data-role-id');
+                var deleteForm = document.getElementById('deleteRoleForm');
+                deleteForm.action = "{% url 'role_delete' 0 %}".replace('0', roleID);
+            });
+        }
+    });
+
+    $(document).ready(function () {
+        // Define required fields for both forms
+        const requiredFields = {
+            '#addRoleForm': ['#name_en', '#name_ar'],
+            '#editRoleForm': ['#edit_name_en', '#edit_name_ar']
+        };
+
+        // Function to validate a form
+        function validateForm(formId) {
+            let isValid = true;
+            const form = $(formId);
+            
+            // Validate each required field
+            requiredFields[formId].forEach(fieldId => {
+                const field = form.find(fieldId);
+                const errorElement = $(`${fieldId}-error`);
+                
+                if (field.val().trim() === '') {
+                    field.addClass('is-invalid');
+                    errorElement.text('This field is required.').css('color', 'red');
+                    isValid = false;
+                } else {
+                    field.removeClass('is-invalid');
+                    errorElement.text('');
+                }
+            });
+            
+            return isValid;
+        }
+
+        // Add form validation on submit
+        $('#addRoleForm').on('submit', function (event) {
+            event.preventDefault();
+            if (!validateForm('#addRoleForm')) {
+                return false;
+            }
+            this.submit();
+        });
+
+        // Edit form validation on submit
+        $('#editRoleForm').on('submit', function (event) {
+            event.preventDefault();
+            if (!validateForm('#editRoleForm')) {
+                return false;
+            }
+            this.submit();
+        });
+
+        // Clear validation errors when user starts typing
+        $('input').on('input', function () {
+            const field = $(this);
+            const fieldId = `#${field.attr('id')}`;
+            const errorElement = $(`${fieldId}-error`);
+            
+            field.removeClass('is-invalid');
+            errorElement.text('');
+        });
+
+        // Initialize form validation on modal show to clear previous errors
+        $('#addRoleModal, #editRoleModal').on('show.bs.modal', function () {
+            $(this).find('.is-invalid').removeClass('is-invalid');
+            $(this).find('.invalid-feedback').text('');
+        });
+
+        // Hide action card if clicking outside
+        $(document).on('click', function(event) {
+            if (!$(event.target).closest('.action-menu-container').length) {
+                $('.action-card').hide();
+            }
+        });
+    });
+</script> 
+{% endblock %}

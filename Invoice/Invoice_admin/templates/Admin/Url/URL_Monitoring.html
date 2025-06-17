@@ -1,0 +1,483 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+{% load sass_tags %}
+
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<!-- Plugins css Ends-->
+<style>
+    .url-detail-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .url-detail-title {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    .status-safe {
+        background-color: #d1e7dd;
+        color: #0f5132;
+    }
+    .status-warning {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .status-danger {
+        background-color: #f8d7da;
+        color: #842029;
+    }
+    .status-unknown {
+        background-color: #e9ecef;
+        color: #495057;
+    }
+    .url-content {
+        background: #fff;
+        padding: 15px;
+        border-radius: 5px;
+        border-left: 4px solid #3a7afe;
+        word-break: break-all;
+    }
+    .threat-badge {
+        display: inline-block;
+        padding: 5px 10px;
+        background-color: #f8d7da;
+        color: #842029;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        margin-right: 5px;
+        margin-bottom: 5px;
+    }
+    .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #3a7afe;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-right: 15px;
+    }
+    .user-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .rating-label {
+        margin-bottom: 0;
+        font-weight: 500;
+    }
+    .rating-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #3a7afe;
+    }
+    .rating-progress {
+        height: 8px;
+        border-radius: 4px;
+    }
+    .progress-bar-safe {
+        background-color: #198754;
+    }
+    .progress-bar-warning {
+        background-color: #ffc107;
+    }
+    .progress-bar-danger {
+        background-color: #dc3545;
+    }
+    .threat-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block title %}URL Monitoring{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <div class="container-fluid">
+        <div class="page-title">
+            <div class="row">
+                <div class="col-6">
+                    <h3>{{breadcrumb.child}}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="display" id="url-monitoring-table">
+                                <thead>
+                                    <tr>
+                                        <th data-data="id">ID</th>
+                                        <th data-data="domain">Domain</th>
+                                        <th data-data="ssl_status">SSL Status</th>
+                                        <th data-data="domain_reputation">Reputation</th>
+                                        <th data-data="rating">Rating</th>
+                                        <th data-data="user_response">User Response</th>
+                                        <th data-data="created_at">Date</th>
+                                        <th data-data="actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded via AJAX -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View URL Modal -->
+<div class="modal fade" id="viewURLModal" tabindex="-1" aria-labelledby="viewURLModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewURLModalLabel">URL Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="user-info">
+                    <div class="user-avatar" id="view-user-avatar">A</div>
+                    <div>
+                        <h6 class="mb-1" id="view-user">Anonymous User</h6>
+                        <small class="text-muted" id="view-date">Date not available</small>
+                    </div>
+                </div>
+                
+                <div class="url-detail-card">
+                    <h6 class="url-detail-title">URL Information</h6>
+                    <div class="url-content mb-3" id="view-url-full">
+                        https://example.com
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Domain:</strong> <span id="view-domain">example.com</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>User Response:</strong> 
+                                <span id="view-user-response" class="badge bg-secondary">No Response</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="url-detail-card">
+                            <h6 class="url-detail-title">SSL Details</h6>
+                            <p><strong>SSL Status:</strong> <span id="view-ssl-status">Unknown</span></p>
+                            <p><strong>Expiry Days:</strong> <span id="view-ssl-expiry">N/A</span></p>
+                            <p><strong>Validity:</strong> <span id="view-ssl-validity">N/A</span></p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="url-detail-card">
+                            <h6 class="url-detail-title">Security Rating</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    <span class="rating-value" id="view-rating-value">0</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <p class="rating-label mb-1">Rating</p>
+                                    <div class="progress rating-progress">
+                                        <div class="progress-bar" id="view-rating-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p><strong>Reputation:</strong> <span id="view-reputation">Unknown</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="url-detail-card">
+                    <h6 class="url-detail-title">Security Analysis</h6>
+                    <div class="mb-3">
+                        <p><strong>Known Threats:</strong></p>
+                        <div class="threat-container" id="view-threats-container">
+                            <!-- Threats will be added here dynamically -->
+                            <span class="text-muted">No threats detected</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <p><strong>Domain History:</strong></p>
+                        <p id="view-domain-history" class="text-muted">No history available</p>
+                    </div>
+                    <div>
+                        <p><strong>Recommendation:</strong></p>
+                        <p id="view-recommendation" class="text-muted">No recommendation available</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js'%}"></script>
+<script src="{% static 'assets/js/datatable/datatables/datatable.custom.js'%}"></script>
+<script src="{% static 'assets/js/tooltip-init.js'%}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initialize DataTable with server-side processing
+        var table = $('#url-monitoring-table').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": window.location.href,
+                "type": "GET",
+                "data": function(d) {
+                    // You can add additional parameters here if needed
+                }
+            },
+            "columns": [
+                {"data": "id"},
+                {"data": "domain"},
+                {
+                    "data": "ssl_status",
+                    "render": function(data, type, row) {
+                        if (data === 'Secure') {
+                            return '<span class="badge bg-success">Secure</span>';
+                        } else if (data === 'Unsecured') {
+                            return '<span class="badge bg-danger">Unsecured</span>';
+                        } else if (data === 'Moderate') {
+                            return '<span class="badge bg-warning">Expiring Soon</span>';
+                        } else {
+                            return '<span class="badge bg-secondary">Unknown</span>';
+                        }
+                    }
+                },
+                {
+                    "data": "domain_reputation",
+                    "render": function(data, type, row) {
+                        if (data && data.includes('Safe')) {
+                            return '<span class="badge bg-success">Safe</span>';
+                        } else if (data && data.includes('Unsafe')) {
+                            return '<span class="badge bg-danger">Unsafe</span>';
+                        } else if (data && data.includes('Moderate')) {
+                            return '<span class="badge bg-warning">Moderate</span>';
+                        } else {
+                            return '<span class="badge bg-secondary">Unknown</span>';
+                        }
+                    }
+                },
+                {
+                    "data": "rating",
+                    "render": function(data, type, row) {
+                        const rating = parseFloat(data) || 0;
+                        const width = rating * 10;
+                        let progressClass = 'bg-danger';
+                        if (rating >= 7) progressClass = 'bg-success';
+                        else if (rating >= 4) progressClass = 'bg-warning';
+                        
+                        return `
+                            <div class="progress" style="height: 8px; width: 100px;">
+                                <div class="progress-bar ${progressClass}" role="progressbar" 
+                                    style="width: ${width}%" 
+                                    aria-valuenow="${rating}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="10">
+                                </div>
+                            </div>
+                            <small>${rating}/10</small>
+                        `;
+                    }
+                },
+                {
+                    "data": "user_response",
+                    "render": function(data, type, row) {
+                        if (data === 0) {
+                            return '<span class="badge bg-danger">Unsafe</span>';
+                        } else if (data === 1) {
+                            return '<span class="badge bg-success">Safe</span>';
+                        } else {
+                            return '<span class="badge bg-secondary">No Response</span>';
+                        }
+                    }
+                },
+                {"data": "created_at"},
+                {
+                    "data": "actions",
+                    "render": function(data, type, row) {
+                        return `
+                            <div class="action-menu-container" style="position: relative; display: inline-block;">
+                                <a href="#" class="three-dots-menu">
+                                    <i data-feather="more-vertical"></i>
+                                </a>
+                                <div class="action-card" style="display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); z-index: 10; width: auto;">
+                                    <ul style="list-style: none; padding: 0; margin: 0;">
+                                        <li style="padding: 8px 12px;">
+                                            <a style="font-size: small" href="#" class="view-url-btn" 
+                                               data-url-id="${data}"
+                                               data-url-domain="${row.domain}"
+                                               data-url-full="${row.url_full}"
+                                               data-url-user="${row.user}"
+                                               data-url-user-id="${row.user_id}"
+                                               data-url-ssl-status="${row.ssl_status}"
+                                               data-url-ssl-expiry="${row.ssl_expiry_days}"
+                                               data-url-ssl-validity="${row.ssl_validity}"
+                                               data-url-reputation="${row.domain_reputation}"
+                                               data-url-threats="${row.known_threats}"
+                                               data-url-history="${row.domain_history}"
+                                               data-url-recommendation="${row.recommendation}"
+                                               data-url-rating="${row.rating}"
+                                               data-url-user-response="${row.user_response}"
+                                               data-url-date="${row.created_at}">
+                                               View
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            ],
+            "responsive": true,
+            "lengthMenu": [10, 25, 50, 100],
+            "pageLength": 10
+        });
+
+        // Keep your existing modal and action menu JavaScript
+        // View URL Modal Handler
+        const viewURLModal = new bootstrap.Modal(document.getElementById('viewURLModal'));
+        
+        // Handle click on view URL buttons using event delegation
+        $(document).on('click', '.view-url-btn', function(e) {
+            e.preventDefault();
+            const button = $(this);
+            
+            // Get all data attributes
+            const user = button.data('url-user');
+            const userId = button.data('url-user-id');
+            const domain = button.data('url-domain');
+            const fullUrl = button.data('url-full');
+            const sslStatus = button.data('url-ssl-status');
+            const sslExpiry = button.data('url-ssl-expiry');
+            const sslValidity = button.data('url-ssl-validity');
+            const reputation = button.data('url-reputation');
+            const threats = button.data('url-threats');
+            const history = button.data('url-history');
+            const recommendation = button.data('url-recommendation');
+            const rating = parseInt(button.data('url-rating'));
+            const userResponse = parseInt(button.data('url-user-response'));
+            const date = button.data('url-date');
+            
+            // Set user information
+            $('#view-user').text(user);
+            $('#view-user-avatar').text(user.charAt(0).toUpperCase());
+            $('#view-date').text(date || 'Date not available');
+            
+            // Set URL information
+            $('#view-domain').text(domain || 'Not available');
+            $('#view-url-full').text(fullUrl || 'Not available');
+            
+            // Set SSL information
+            $('#view-ssl-status').text(sslStatus || 'Unknown');
+            $('#view-ssl-expiry').text(sslExpiry ? `${sslExpiry} days` : 'N/A');
+            $('#view-ssl-validity').text(sslValidity || 'N/A');
+            
+            // Set rating information
+            $('#view-rating-value').text(rating);
+            const ratingBar = $('#view-rating-bar');
+            ratingBar.css('width', `${rating * 10}%`);
+            ratingBar.attr('aria-valuenow', rating);
+            
+            // Set rating bar color based on value
+            if (rating >= 7) {
+                ratingBar.removeClass('progress-bar-warning progress-bar-danger').addClass('progress-bar-safe');
+            } else if (rating >= 4) {
+                ratingBar.removeClass('progress-bar-safe progress-bar-danger').addClass('progress-bar-warning');
+            } else {
+                ratingBar.removeClass('progress-bar-safe progress-bar-warning').addClass('progress-bar-danger');
+            }
+            
+            // Set reputation
+            $('#view-reputation').text(reputation || 'Unknown');
+            
+            // Set user response
+            const userResponseElement = $('#view-user-response');
+            if (userResponse === 0) {
+                userResponseElement.text('Unsafe').removeClass('bg-success bg-secondary').addClass('bg-danger');
+            } else if (userResponse === 1) {
+                userResponseElement.text('Safe').removeClass('bg-danger bg-secondary').addClass('bg-success');
+            } else {
+                userResponseElement.text('No Response').removeClass('bg-danger bg-success').addClass('bg-secondary');
+            }
+            
+            // Set threats
+            const threatsContainer = $('#view-threats-container');
+            threatsContainer.empty(); // Clear previous threats
+            
+            if (threats && threats !== 'null' && threats !== '') {
+                const threatList = threats.split(',');
+                threatList.forEach(threat => {
+                    if (threat.trim()) {
+                        threatsContainer.append(`<span class="threat-badge">${threat.trim()}</span>`);
+                    }
+                });
+            }
+            
+            if (threatsContainer.children().length === 0) {
+                threatsContainer.html('<span class="text-muted">No threats detected</span>');
+            }
+            
+            // Set domain history
+            $('#view-domain-history').text(history || 'No history available');
+            
+            // Set recommendation
+            $('#view-recommendation').text(recommendation || 'No recommendation available');
+            
+            // Show the modal
+            viewURLModal.show();
+        });
+        
+        // Toggle action menu and handle outside clicks
+        $(document).on('click', '.three-dots-menu', function(e) {
+            e.preventDefault();
+            const actionCard = $(this).next('.action-card');
+            $('.action-card').not(actionCard).hide();
+            actionCard.toggle();
+        });
+        
+        $(document).click(function(e) {
+            if (!$(e.target).closest('.action-menu-container').length) {
+                $('.action-card').hide();
+            }
+        });
+        
+        // Initialize Feather icons after DataTable is drawn
+        table.on('draw', function() {
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+        });
+    });
+</script>
+{% endblock %}

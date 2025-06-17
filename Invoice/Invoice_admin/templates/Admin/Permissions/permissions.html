@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="page-body">
+    <div class="container-fluid">
+        <div class="page-title">
+            <div class="row">
+                <div class="col-6">
+                    <h3>Permissions for {{ role.name_en }}</h3>
+                </div>
+                <div class="col-6 text-end">
+                    <a href="{% url 'role_list' %}" class="btn btn-secondary">Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <button type="button" id="globalToggleAll" class="btn btn-outline-primary btn-sm">
+                        Select All
+                    </button>
+                </div>
+                <div class="permissions-container">
+                    {% for group in module_permissions %}
+                    <div class="permission-section mb-4">
+                        <div class="permission-header bg-light p-3 rounded-top d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0" style="color: black;">
+                                {{ group.module.name_en|default:"Other Permissions" }}
+                            </h5>
+                            <div class="section-actions">
+                                <button type="button" class="btn btn-sm btn-outline-primary module-toggle" data-module="{{ forloop.counter }}">
+                                    Select All
+                                </button>
+                            </div>
+                        </div>
+                        <div class="permission-body p-3 border rounded-bottom">
+                            <div class="row">
+                                {% for permission in group.permissions %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input module-{{ forloop.parentloop.counter }}" type="checkbox" 
+                                               name="permissions" 
+                                               value="{{ permission.id }}"
+                                               id="perm-{{ permission.id }}"
+                                               {% if permission in role_permissions %}checked{% endif %}>
+                                        <label class="form-check-label" for="perm-{{ permission.id }}">
+                                            {{ permission.display_name }} 
+                                            <small class="text-muted">({{ permission.name }})</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Save Permissions</button>
+                    <a href="{% url 'role_list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block style %}
+<style>
+    .permission-section {
+        margin-bottom: 1.5rem;
+    }
+    .permission-header {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-bottom: none;
+    }
+    .permission-body {
+        border: 1px solid #dee2e6;
+        border-top: none;
+    }
+    .section-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Module-specific toggle buttons
+        document.querySelectorAll('.module-toggle').forEach(button => {
+            button.addEventListener('click', function() {
+                const moduleNum = this.getAttribute('data-module');
+                const checkboxes = document.querySelectorAll(`.module-${moduleNum}`);
+                const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+                const newState = !allChecked; // Determine the new state first
+                
+                // Set all checkboxes to the new state
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = newState;
+                });
+                
+                // Update button based on the NEW state
+                this.textContent = newState ? 'Remove All' : 'Select All';
+                this.classList.toggle('btn-outline-primary', !newState);
+                this.classList.toggle('btn-outline-danger', newState);
+                
+                updateGlobalToggleState();
+            });
+            
+            // Initialize button state (unchanged)
+            const moduleNum = button.getAttribute('data-module');
+            const checkboxes = document.querySelectorAll(`.module-${moduleNum}`);
+            const allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(checkbox => checkbox.checked);
+            
+            if (allChecked) {
+                button.textContent = 'Remove All';
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-outline-danger');
+            }
+        });
+
+        // Global toggle all button
+        const globalToggleBtn = document.getElementById('globalToggleAll');
+        globalToggleBtn.addEventListener('click', function() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="permissions"]');
+            const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = !allChecked;
+            });
+            
+            // Update all module toggle buttons
+            document.querySelectorAll('.module-toggle').forEach(button => {
+                const moduleNum = button.getAttribute('data-module');
+                const moduleCheckboxes = document.querySelectorAll(`.module-${moduleNum}`);
+                const moduleAllChecked = Array.from(moduleCheckboxes).every(checkbox => checkbox.checked);
+                
+                button.textContent = moduleAllChecked ? 'Remove All' : 'Select All';
+                button.classList.toggle('btn-outline-primary', !moduleAllChecked);
+                button.classList.toggle('btn-outline-danger', moduleAllChecked);
+            });
+            
+            updateGlobalToggleState();
+        });
+        
+        // Function to update global toggle button state
+        function updateGlobalToggleState() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="permissions"]');
+            const allChecked = checkboxes.length > 0 && Array.from(checkboxes).every(checkbox => checkbox.checked);
+            const noneChecked = checkboxes.length > 0 && Array.from(checkboxes).every(checkbox => !checkbox.checked);
+            
+            globalToggleBtn.textContent = allChecked ? 'Remove All' : 'Select All';
+            globalToggleBtn.classList.toggle('btn-outline-primary', !allChecked);
+            globalToggleBtn.classList.toggle('btn-outline-danger', allChecked);
+        }
+        
+        // Initialize global toggle button state
+        updateGlobalToggleState();
+        
+        // Update module toggle buttons when individual checkboxes are clicked
+        document.querySelectorAll('input[type="checkbox"][name="permissions"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const moduleClass = Array.from(this.classList).find(cls => cls.startsWith('module-'));
+                if (moduleClass) {
+                    const moduleNum = moduleClass.split('-')[1];
+                    const moduleCheckboxes = document.querySelectorAll(`.${moduleClass}`);
+                    const moduleAllChecked = Array.from(moduleCheckboxes).every(cb => cb.checked);
+                    const moduleButton = document.querySelector(`.module-toggle[data-module="${moduleNum}"]`);
+                    
+                    if (moduleButton) {
+                        moduleButton.textContent = moduleAllChecked ? 'Remove All' : 'Select All';
+                        moduleButton.classList.toggle('btn-outline-primary', !moduleAllChecked);
+                        moduleButton.classList.toggle('btn-outline-danger', moduleAllChecked);
+                    }
+                }
+                updateGlobalToggleState();
+            });
+        });
+    });
+</script>
+{% endblock %}

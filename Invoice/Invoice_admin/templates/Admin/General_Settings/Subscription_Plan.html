@@ -1,0 +1,427 @@
+{% extends 'base.html' %} 
+{% load custom_filters %} 
+{% load static %} 
+{% load sass_tags %} 
+
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<!-- Plugins css Ends--> 
+{% endblock %} 
+
+<style>
+    .is-invalid {
+        border-color: #dc3545;
+        background-color: #f8d7da;
+    }
+    .duration-badge {
+        font-size: 0.8rem;
+        padding: 0.35em 0.65em;
+    }
+</style> 
+
+{% block title %}Subscription Plans{% endblock %} 
+
+{% block content %} 
+<div class="page-body">
+    <div class="container-fluid">
+        <div class="page-title">
+            <div class="row">
+                <div class="col-6">
+                    <h3>{{breadcrumb.child}}</h3>
+                </div>
+                <div class="col-6">
+                    <ol class="breadcrumb">
+                        <button class="btn btn-pill btn-outline-primary-2x ml-auto" data-bs-toggle="modal" data-bs-target="#addPlanModal">Add Plan</button>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <!-- Subscription Plan List -->
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="display" id="basic-1">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Name (English)</th>
+                                        <th>Name (Arabic)</th>
+                                        <th>Duration</th>
+                                        <th>Price</th>
+                                        <th>No of Urls</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody> 
+                                    {% for plan in plans %} 
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ plan.name_en }}</td>
+                                        <td>{{ plan.name_ar|default:"-" }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if plan.duration == 1 %}primary{% else %}success{% endif %} duration-badge">
+                                                {{ plan.get_duration_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ system_settings.currency_symbol }} {{ plan.price }}</td>
+                                        <td>{{ plan.no_url}}</td>
+                                        <td>
+                                            <span class="badge bg-{% if plan.is_active %}success{% else %}danger{% endif %}">
+                                                {% if plan.is_active %}Active{% else %}Inactive{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="action-menu-container" style="position: relative; display: inline-block;">
+                                                <a href="#" class="three-dots-menu" onclick="toggleMenu(this)">
+                                                    <i data-feather="more-vertical"></i>
+                                                </a>
+                                                <div class="action-card" style="
+                                                    display: none;
+                                                    position: absolute;
+                                                    top: 100%;
+                                                    right: 0;
+                                                    background: #fff;
+                                                    border: 1px solid #ccc;
+                                                    border-radius: 4px;
+                                                    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+                                                    z-index: 10;
+                                                    width: auto;
+                                                ">
+                                                    <ul style="list-style: none; padding: 0; margin: 0;">
+                                                        <li style="padding: 8px 12px;">
+                                                            <a style="font-size: small" href="#" data-bs-toggle="modal" data-bs-target="#editPlanModal" 
+                                                            data-plan-id="{{ plan.id }}" 
+                                                            data-plan-name_en="{{ plan.name_en }}" 
+                                                            data-plan-name_ar="{{ plan.name_ar }}"
+                                                            data-plan-description_en="{{ plan.description_en }}"
+                                                            data-plan-description_ar="{{ plan.description_ar }}"
+                                                            data-plan-price="{{ plan.price }}"
+                                                            data-plan-duration="{{ plan.duration }}"
+                                                            data-plan-no_url="{{ plan.no_url }}"
+                                                            data-plan-is_active="{% if plan.is_active %}true{% else %}false{% endif %}"> Edit </a>
+                                                        </li>
+                                                        <!-- <li style="padding: 8px 12px; border-top: 1px solid #eee;">
+                                                            <a style="font-size: small;" href="#" data-bs-toggle="modal" data-bs-target="#deletePlanModal" data-plan-id="{{ plan.id }}">
+                                                            Delete </a>
+                                                        </li> -->
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr> 
+                                    {% endfor %} 
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add Plan Modal -->
+        <div class="modal fade" id="addPlanModal" tabindex="-1" aria-labelledby="addPlanModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addPlanModalLabel">Add Subscription Plan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" action="{% url 'subscription_plan_create' %}" id="addPlanForm" enctype="multipart/form-data"> 
+                            {% csrf_token %} 
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name_en" class="form-label">Name (English)*</label>
+                                    <input type="text" class="form-control" id="name_en" name="name_en" >
+                                    <div class="invalid-feedback" id="name_en-error"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="name_ar" class="form-label">Name (Arabic)</label>
+                                    <input type="text" class="form-control" id="name_ar" name="name_ar">
+                                    <div class="invalid-feedback" id="name_ar-error"></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="description_en" class="form-label">Description (English)</label>
+                                    <textarea class="form-control" id="description_en" name="description_en" rows="3"></textarea>
+                                    <div class="invalid-feedback" id="description_en-error"></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="description_ar" class="form-label">Description (Arabic)</label>
+                                    <textarea class="form-control" id="description_ar" name="description_ar" rows="3"></textarea>
+                                    <div class="invalid-feedback" id="description_ar-error"></div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="price" class="form-label">Price*</label>
+                                    <input type="number" step="0.01" class="form-control" id="price" name="price" >
+                                    <div class="invalid-feedback" id="price-error"></div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="duration" class="form-label">Duration*</label>
+                                    <select class="form-control" id="duration" name="duration" >
+                                        <option value="1">Monthly</option>
+                                        <option value="2">Annual</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="no_url" class="form-label">No of Urls</label>
+                                    <input type="text" class="form-control" id="no_url" name="no_url">
+                                    <div class="invalid-feedback" id="no_url-error"></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                        <label class="form-check-label" for="is_active">Active</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Add Plan</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Edit Plan Modal -->
+        <div class="modal fade" id="editPlanModal" tabindex="-1" aria-labelledby="editPlanModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editPlanModalLabel">Edit Subscription Plan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" id="editPlanForm" enctype="multipart/form-data"> 
+                            {% csrf_token %} 
+                            <div class="row">
+                                <input type="hidden" id="planId" name="id" />
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_name_en" class="form-label">Name (English)*</label>
+                                    <input type="text" class="form-control" id="edit_name_en" name="name_en" >
+                                    <div class="invalid-feedback" id="edit_name_en-error"></div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="edit_name_ar" class="form-label">Name (Arabic)</label>
+                                    <input type="text" class="form-control" id="edit_name_ar" name="name_ar">
+                                    <div class="invalid-feedback" id="edit_name_ar-error"></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="edit_description_en" class="form-label">Description (English)</label>
+                                    <textarea class="form-control" id="edit_description_en" name="description_en" rows="3"></textarea>
+                                    <div class="invalid-feedback" id="edit_description_en-error"></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="edit_description_ar" class="form-label">Description (Arabic)</label>
+                                    <textarea class="form-control" id="edit_description_ar" name="description_ar" rows="3"></textarea>
+                                    <div class="invalid-feedback" id="edit_description_ar-error"></div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit_price" class="form-label">Price*</label>
+                                    <input type="number" step="0.01" class="form-control" id="edit_price" name="price" >
+                                    <div class="invalid-feedback" id="edit_price-error"></div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit_duration" class="form-label">Duration*</label>
+                                    <select class="form-control" id="edit_duration" name="duration" >
+                                        <option value="1">Monthly</option>
+                                        <option value="2">Annual</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="edit_no_url" class="form-label">No of Urls</label>
+                                    <input type="text" class="form-control" id="edit_no_url" name="no_url">
+                                    <div class="invalid-feedback" id="edit_no_url-error"></div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="edit_is_active" name="is_active">
+                                        <label class="form-check-label" for="edit_is_active">Active</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">Update Plan</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> 
+</div>
+<!-- Delete Plan Modal -->
+<div class="modal fade" id="deletePlanModal" tabindex="-1" aria-labelledby="deletePlanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deletePlanModalLabel">Delete Subscription Plan</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="post" action="" id="deletePlanForm">
+            {% csrf_token %}
+            <input type="hidden" id="plan_id" name="id">
+            <p>Are you sure you want to delete this subscription plan?</p>
+            <button type="submit" class="btn btn-danger">Delete Plan</button>
+          </form>
+        </div>
+      </div>
+    </div>
+</div>
+  
+{% endblock %} 
+
+{% block script %} 
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js'%}"></script>
+<script src="{% static 'assets/js/datatable/datatables/datatable.custom.js'%}"></script>
+<script src="{% static 'assets/js/tooltip-init.js'%}"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Edit Plan Modal
+        var editPlanModal = document.getElementById("editPlanModal");
+        if (editPlanModal) {
+            editPlanModal.addEventListener("show.bs.modal", function(event) {
+                var button = event.relatedTarget;
+                var planId = button.getAttribute("data-plan-id");
+                var name_en = button.getAttribute("data-plan-name_en");
+                var name_ar = button.getAttribute("data-plan-name_ar");
+                var description_en = button.getAttribute("data-plan-description_en");
+                var description_ar = button.getAttribute("data-plan-description_ar");
+                var price = button.getAttribute("data-plan-price");
+                var duration = button.getAttribute("data-plan-duration");
+                var no_url = button.getAttribute("data-plan-no_url");
+                var is_active = button.getAttribute("data-plan-is_active") === "true";
+
+                var form = document.getElementById("editPlanForm");
+                form.action = "{% url 'subscription_plan_edit' 0 %}".replace("0", planId);
+                form.querySelector("#planId").value = planId;
+                form.querySelector("#edit_name_en").value = name_en || "";
+                form.querySelector("#edit_name_ar").value = name_ar || "";
+                form.querySelector("#edit_description_en").value = description_en || "";
+                form.querySelector("#edit_description_ar").value = description_ar || "";
+                form.querySelector("#edit_price").value = price || "";
+                form.querySelector("#edit_duration").value = duration || "1";
+                form.querySelector("#edit_no_url").value = no_url || "0";
+                form.querySelector("#edit_is_active").checked = is_active;
+            });
+        }
+
+        // Toggle the visibility of the action card
+        document.querySelectorAll(".three-dots-menu").forEach(function(menu) {
+            menu.addEventListener("click", function(event) {
+                event.preventDefault();
+                var actionCard = menu.nextElementSibling;
+                actionCard.style.display = actionCard.style.display === "none" || actionCard.style.display === "" ? "block" : "none";
+                // Close other open action cards
+                document.querySelectorAll(".action-card").forEach(function(card) {
+                    if (card !== actionCard) {
+                        card.style.display = "none";
+                    }
+                });
+            });
+        });
+
+        // Delete Plan Modal
+        var deletePlanModal = document.getElementById('deletePlanModal');
+        if (deletePlanModal) {
+            deletePlanModal.addEventListener('show.bs.modal', function(event) {
+                var button = event.relatedTarget;
+                var planID = button.getAttribute('data-plan-id');
+                var deleteForm = document.getElementById('deletePlanForm');
+                deleteForm.action = "{% url 'subscription_plan_delete' 0 %}".replace('0', planID);
+            });
+        }
+    });
+
+    $(document).ready(function () {
+        // Define required fields for both forms
+        const requiredFields = {
+            '#addPlanForm': ['#name_en','#name_ar', '#description_en', '#description_ar', '#price', '#duration','#no_url'],
+            '#editPlanForm': ['#edit_name_en', '#edit_name_ar','#edit_description_en','#edit_description_ar', '#edit_price', '#edit_duration','#edit_no_url']
+        };
+
+        // Function to validate a form
+        function validateForm(formId) {
+            let isValid = true;
+            const form = $(formId);
+            
+            // Validate each required field
+            requiredFields[formId].forEach(fieldId => {
+                const field = form.find(fieldId);
+                const errorElement = $(`${fieldId}-error`);
+                
+                if (field.val().trim() === '') {
+                    field.addClass('is-invalid');
+                    errorElement.text('This field is required.').css('color', 'red');
+                    isValid = false;
+                } else {
+                    field.removeClass('is-invalid');
+                    errorElement.text('');
+                    
+                    // Additional validation for price fields
+                    if (fieldId === '#price' || fieldId === '#edit_price') {
+                        if (parseFloat(field.val()) <= 0) {
+                            field.addClass('is-invalid');
+                            errorElement.text('Price must be greater than 0.').css('color', 'red');
+                            isValid = false;
+                        }
+                    }
+                }
+            });
+            
+            return isValid;
+        }
+
+        // Add form validation on submit
+        $('#addPlanForm').on('submit', function (event) {
+            event.preventDefault();
+            if (!validateForm('#addPlanForm')) {
+                return false;
+            }
+            this.submit();
+        });
+
+        // Edit form validation on submit
+        $('#editPlanForm').on('submit', function (event) {
+            event.preventDefault();
+            if (!validateForm('#editPlanForm')) {
+                return false;
+            }
+            this.submit();
+        });
+
+        // Clear validation errors when user starts typing
+        $('input, textarea, select').on('input change', function () {
+            const field = $(this);
+            const fieldId = `#${field.attr('id')}`;
+            const errorElement = $(`${fieldId}-error`);
+            
+            field.removeClass('is-invalid');
+            errorElement.text('');
+        });
+
+        // Initialize form validation on modal show to clear previous errors
+        $('#addPlanModal, #editPlanModal').on('show.bs.modal', function () {
+            $(this).find('.is-invalid').removeClass('is-invalid');
+            $(this).find('.invalid-feedback').text('');
+        });
+
+        // Hide action card if clicking outside
+        $(document).on('click', function(event) {
+            if (!$(event.target).closest('.action-menu-container').length) {
+                $('.action-card').hide();
+            }
+        });
+    });
+    $(document).ready(function () {
+        $('#edit_no_url, #no_url').on('input', function () {
+            let sanitizedValue = $(this).val().replace(/\D/g, ''); // Remove non-numeric characters
+            $(this).val(sanitizedValue);
+        });
+    });
+
+</script> 
+{% endblock %}

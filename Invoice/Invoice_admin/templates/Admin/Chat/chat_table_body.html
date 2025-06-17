@@ -1,0 +1,51 @@
+<!-- {% load static %}
+{% for chat in chats %}
+<tr class="{% if chat.unread_admin_count > 0 %}table-warning{% endif %}">
+    <td>{{ forloop.counter }}</td>
+    <td>
+        <div class="d-flex align-items-center">
+            <div class="flex-shrink-0">
+                {% if chat.user.profile_picture %}
+                <img src="{{ chat.user.profile_picture.url }}" alt="user" class="rounded-circle" width="40">
+                {% else %}
+                <img src="{% static 'assets/images/dashboard/profile.jpg' %}" alt="user" class="rounded-circle" width="40">
+                {% endif %}
+            </div>
+            <div class="flex-grow-1 ms-2">
+                <h6 class="mb-0">{{ chat.user.name }}</h6>
+                <span class="text-muted d-none d-md-inline">{{ chat.user.email }}</span>
+            </div>
+        </div>
+    </td>
+    <td>
+        {% with last_message=chat.messages.last %}
+        {% if last_message %}
+        <div class="text-truncate" style="max-width: 150px;">
+            {{ last_message.message }}
+        </div>
+        <small class="text-muted">{{ last_message.timestamp|timesince }} ago</small>
+        {% else %}
+        <span class="text-muted">No messages</span>
+        {% endif %}
+        {% endwith %}
+    </td>
+    <td>
+        {% if chat.unread_admin_count > 0 %}
+        <span class="badge bg-danger rounded-pill">{{ chat.unread_admin_count }}</span>
+        {% else %}
+        <span class="badge bg-success rounded-pill">0</span>
+        {% endif %}
+    </td>
+    <td>
+        <span class="badge bg-{% if chat.is_active %}success{% else %}danger{% endif %}">
+            {% if chat.is_active %}Active{% else %}Closed{% endif %}
+        </span>
+    </td>
+    <td>
+        <a href="{% url 'admin_chat_detail' chat.user.id %}" class="btn btn-pill btn-outline-primary-2x btn-sm">
+            <i class="fa fa-comments"></i> <span class="d-none d-sm-inline">Chat</span>
+        </a>
+    </td>
+</tr>
+
+{% endfor %} -->

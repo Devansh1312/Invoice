@@ -1,0 +1,834 @@
+{% extends 'base.html' %} 
+{% load custom_filters %} 
+{% load static %} 
+{% load sass_tags %} 
+
+{% block css %}
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+<style>
+/* Status-specific badge styles */
+.badge-active {
+  background-color: #28a745; /* Green */
+}
+
+.badge-expired {
+  background-color: #dc3545; /* Red */
+}
+
+.badge-cancelled {
+  background-color: #6c757d; /* Gray */
+}
+
+.badge-pending {
+  background-color: #ffc107; /* Yellow */
+  color: black !important;
+}
+
+.badge-renewed {
+  background-color: #17a2b8; /* Cyan */
+}
+
+.badge-upgraded {
+  background-color: #6610f2; /* Purple */
+}
+
+/* Base badge style */
+.subscription-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  color: white !important;
+  text-transform: capitalize;
+}
+
+/* Status-based colors */
+.badge-1 {
+  background-color: #28a745; /* Green - Safe / Secure */
+}
+
+.badge-2 {
+  background-color: #dc3545; /* Red - Unsafe / Unsecured */
+}
+
+.badge-3 {
+  background-color: #6c757d; /* Gray - Unknown / No response */
+}
+
+.badge-4 {
+  background-color: #ffc107; /* Yellow - Moderate / Expiring soon */
+  color: black !important;
+}
+
+/* Fix for DataTables in tabs */
+.tab-pane .dataTables_wrapper {
+    padding-top: 15px;
+}
+
+/* Improve tab styling */
+.nav-tabs .nav-link {
+    color: #495057;
+    background-color: #f8f9fa;
+    border-color: #dee2e6 #dee2e6 #fff;
+    margin-right: 5px;
+}
+
+.nav-tabs .nav-link.active {
+    color: #495057;
+    background-color: #fff;
+    border-color: #dee2e6 #dee2e6 #fff;
+    font-weight: 500;
+}
+
+/* Card styling */
+.card {
+    border-radius: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+/* Table styling */
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* Action menu styling */
+.action-menu-container {
+    position: relative;
+    display: inline-block;
+}
+
+.three-dots-menu {
+    cursor: pointer;
+    color: #6c757d;
+    padding: 5px;
+}
+
+.action-card {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 1000;
+    min-width: 120px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.action-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.action-card li {
+    padding: 0.5rem 1rem;
+}
+
+.action-card li:hover {
+    background-color: #f8f9fa;
+}
+
+.action-card a {
+    color: #212529;
+    text-decoration: none;
+    display: block;
+    font-size: small;
+}
+
+/* URL Detail Card Styles */
+.url-detail-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.url-detail-title {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 15px;
+}
+
+.url-content {
+    background: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #3a7afe;
+    margin-bottom: 15px;
+    word-break: break-all;
+}
+
+.threat-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #e9ecef;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.rating-progress {
+    height: 8px;
+    width: 100%;
+}
+
+.rating-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.rating-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767px) {
+    .url-detail-card {
+        padding: 15px;
+    }
+    
+    .url-content {
+        padding: 10px;
+    }
+}
+/* Custom Modal Styling */
+.custom-modal-content {
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+}
+
+/* Cards */
+.url-detail-card {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 5px solid #0d6efd;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Titles */
+.url-detail-title {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: #333;
+}
+</style>
+{% endblock %} 
+
+{% block title %} {{title}} | Page {% endblock %} 
+
+{% block content %} 
+<div class="page-body">
+    <div class="card" style="margin-top:100px;">
+        <div class="card-body">
+            <div class="row">
+                <!-- Profile Information -->
+                <div class="col-12">
+                    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <!-- Title -->
+                        <h4 class="card-title mb-0">Profile Details</h4>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <!-- Export Report Button -->
+                            <!-- <a href="{% url 'user_report_export' user.id %}" class="btn btn-primary btn-sm">
+                                <i class="fa fa-download me-1"></i> Export Report
+                            </a> -->
+
+                            <!-- Back Button -->
+                            {% if user.role.id == 2 %}
+                                {% url 'default_user_list' as back_url %}
+                            {% elif user.role.id == 3 %}
+                                {% url 'subadmin_list' as back_url %}
+                            {% else %}
+                                {% url 'Dashboard' as back_url %}
+                            {% endif %}
+                            <a class="btn btn-secondary btn-sm" href="{{ back_url }}">
+                                <i class="fa fa-arrow-left me-1"></i> Back
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="info">
+                            <div class="row g-3">
+                                <!-- Profile Image (Top on mobile) -->
+                                <div class="col-12 d-block d-sm-none text-center mb-3">
+                                    <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'assets/images/dashboard/profile.jpg' %}{% endif %}" 
+                                         alt="Profile Picture" 
+                                         class="rounded-circle" 
+                                         style="width: 80px; height: 80px; object-fit: cover;">
+                                    <div class="w-100 mt-2">
+                                        <div class="title mb-1">
+                                            <a>{{ user.username }}</a>
+                                        </div>
+                                        <div class="desc">
+                                            <i class="fa fa-briefcase"></i> {{ user.role.name_en }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Left Column -->
+                                <div class="col-12 col-sm-6 col-xl-4 order-sm-1 order-xl-0">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-12 col-md-12">
+                                            <div class="ttl-info text-start">
+                                                <h6>
+                                                    <i class="fa fa-user"></i> Full Name
+                                                </h6>
+                                                <span> {% if user.name %} {{ user.name }} {% else %} {% if user.first_name and user.last_name %} {{ user.first_name }} {{ user.last_name }} {% elif user.first_name %} {{ user.first_name }} {% elif user.last_name %} {{ user.last_name }} {% else %} None {% endif %} {% endif %} </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% if user.is_deleted %}
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6">
+                                            <div class="ttl-info text-start">
+                                                <h6>
+                                                    <i class=""></i> Deleted Reason
+                                                </h6>
+                                                <span>{{ user.deleted_reason_id.name_en|default:"None"}}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <div class="ttl-info text-start">
+                                                <h6>
+                                                    <i class=""></i>Reason
+                                                </h6>
+                                                <span>{{ user.deleted_reason|default:"None"}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% else %}
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-6">
+                                            <div class="ttl-info text-start">
+                                                <h6>
+                                                    <i class=""></i> First Name
+                                                </h6>
+                                                <span>{{ user.first_name|default:"None" }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <div class="ttl-info text-start">
+                                                <h6>
+                                                    <i class=""></i> Last Name
+                                                </h6>
+                                                <span>{{ user.last_name|default:"None"}}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Middle Column (Hidden on mobile) -->
+                                <div class="col-12 col-sm-12 col-xl-4 order-sm-0 order-xl-1 d-none d-sm-flex flex-column align-items-center text-center">
+                                    <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'assets/images/dashboard/profile.jpg' %}{% endif %}" 
+                                         alt="Profile Picture" 
+                                         class="rounded-circle mb-3" 
+                                         style="width: 80px; height: 80px; object-fit: cover;">
+                                    <div class="w-100 mb-3">
+                                        <div class="title mb-1">
+                                            <a>{{ user.username }}</a>
+                                        </div>
+                                        <div class="desc">
+                                            <i class="fa fa-briefcase"></i> {{ user.role.name_en }}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Right Column -->
+                                <div class="col-12 col-sm-6 col-xl-4 order-sm-2 order-xl-2">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-12 col-md-6">
+                                            <div class="ttl-info text-start">
+                                                <h6>
+                                                    <i class="fa fa-phone"></i> Phone
+                                                </h6>
+                                                <span>{{ user.phone|default:"None" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-12 col-md-12">
+                                            <div class="ttl-info text-start">
+                                                <h6>
+                                                    <i class="fa fa-envelope"></i> Email
+                                                </h6>
+                                                <span>{{ user.email|default:"None" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Subscription Information -->
+                        <h4 class="mb-4">Subscription Details</h4>
+                        
+                        <!-- Current Subscription -->
+                        {% if current_subscription %}
+                        <div class="card subscription-card current-subscription mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                                <h5 class="mb-0">Current Plan</h5>
+                                <span class="subscription-badge badge-{{ current_subscription.get_status_display|lower }}">{{ current_subscription.get_status_display }}</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-12 col-md-4 mb-3 mb-md-0">
+                                        <h6>{{ current_subscription.subscription.name_en }}</h6>
+                                        <p class="text-muted">
+                                            {{ current_subscription.subscription.get_duration_display }} Plan
+                                        </p>
+                                        <p><strong>Price:</strong> ${{ current_subscription.amount_paid }}</p>
+                                    </div>
+                                    <div class="col-12 col-md-4 mb-3 mb-md-0">
+                                        <p><strong>Start Date:</strong> {{ current_subscription.start_date|date:"M d, Y" }}</p>
+                                        <p><strong>End Date:</strong> {{ current_subscription.end_date|date:"M d, Y" }}</p>
+                                        <p><strong>Days Remaining:</strong> {{ current_subscription.days_remaining }}</p>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <p><strong>URLs Used:</strong> {{ current_subscription.used_url }}/{{ current_subscription.allowed_url }}</p>
+                                        <p><strong>Payment Method:</strong> {{ current_subscription.payment_method|default:"-" }}</p>
+                                        <p><strong>Transaction ID:</strong> {{ current_subscription.transaction_id|default:"-" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            No active subscription found.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- Datatable Section -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Add tab navigation -->
+                            <ul class="nav nav-tabs" id="dataTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="url-history-tab" data-bs-toggle="tab" href="#url-history" role="tab" aria-controls="url-history" aria-selected="true">URL History</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="subscription-history-tab" data-bs-toggle="tab" href="#subscription-history" role="tab" aria-controls="subscription-history" aria-selected="false">Subscription History</a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="dataTabContent">
+                                <!-- URL History Tab  -->
+                                <div class="tab-pane fade show active" id="url-history" role="tabpanel" aria-labelledby="url-history-tab">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-bordered" id="url-history-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>No.</th>
+                                                    <th>Domain</th>
+                                                    <th>SSL Status</th>
+                                                    <th>Reputation</th>
+                                                    <th>Rating</th>
+                                                    <th>User Response</th>
+                                                    <th>Date</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for url in url_history %}
+                                                <tr>
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ url.domain|default:url.url|truncatechars:30 }}</td>
+                                                    <td>
+                                                        {% if url.ssl_status == 'Secure' %}
+                                                            <span class="subscription-badge badge-1">Secure</span>
+                                                        {% elif url.ssl_status == 'Unsecured' %}
+                                                            <span class="subscription-badge badge-2">Unsecured</span>
+                                                        {% elif url.ssl_status == 'Moderate' %}
+                                                            <span class="subscription-badge badge-4">Expiring Soon</span>
+                                                        {% else %}
+                                                            <span class="subscription-badge badge-3">Unknown</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        {% if 'Safe' in url.domain_reputation %}
+                                                            <span class="subscription-badge badge-1">Safe</span>
+                                                        {% elif 'Unsafe' in url.domain_reputation %}
+                                                            <span class="subscription-badge badge-2">Unsafe</span>
+                                                        {% elif 'Moderate' in url.domain_reputation %}
+                                                            <span class="subscription-badge badge-4">Moderate</span>
+                                                        {% else %}
+                                                            <span class="subscription-badge badge-3">Unknown</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <div class="progress" style="height: 8px; width: 100px;">
+                                                            {% if url.rating >= 7 %}
+                                                                <div class="progress-bar bg-success" role="progressbar" style="width: {% widthratio url.rating 1 10 %}%" aria-valuenow="{{ url.rating }}" aria-valuemin="0" aria-valuemax="10"></div>
+                                                            {% elif url.rating >= 4 %}
+                                                                <div class="progress-bar bg-warning" role="progressbar" style="width: {% widthratio url.rating 1 10 %}%" aria-valuenow="{{ url.rating }}" aria-valuemin="0" aria-valuemax="10"></div>
+                                                            {% else %}
+                                                                <div class="progress-bar bg-danger" role="progressbar" style="width: {% widthratio url.rating 1 10 %}%" aria-valuenow="{{ url.rating }}" aria-valuemin="0" aria-valuemax="10"></div>
+                                                            {% endif %}
+                                                        </div>
+                                                        <small>{{ url.rating }}/10</small>
+                                                    </td>
+                                                    <td>
+                                                        {% if url.user_response == 0 %}
+                                                            <span class="subscription-badge badge-2">Unsafe</span>
+                                                        {% elif url.user_response == 1 %}
+                                                            <span class="subscription-badge badge-1">Safe</span>
+                                                        {% else %}
+                                                            <span class="subscription-badge badge-3">No Response</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ url.created_at|date:"Y-m-d" }}</td>
+                                                    <td>
+                                                        <div class="action-menu-container">
+                                                            <a href="#" class="three-dots-menu">
+                                                                <i data-feather="more-vertical"></i>
+                                                            </a>
+                                                            <div class="action-card">
+                                                                <ul>
+                                                                    <li>
+                                                                        <a href="#" class="view-url-btn"
+                                                                           data-url-id="{{ url.id }}"
+                                                                           data-url-domain="{{ url.domain|default:'' }}"
+                                                                           data-url-full="{{ url.url|default:'' }}"
+                                                                           data-url-ssl-status="{{ url.ssl_status|default:'' }}"
+                                                                           data-url-ssl-expiry="{{ url.ssl_expiry_days|default:'' }}"
+                                                                           data-url-ssl-validity="{{ url.ssl_validity|default:'' }}"
+                                                                           data-url-reputation="{{ url.domain_reputation|default:'' }}"
+                                                                           data-url-threats="{{ url.known_threats|default:'' }}"
+                                                                           data-url-history="{{ url.domain_history|default:'' }}"
+                                                                           data-url-recommendation="{{ url.recommendation|default:'' }}"
+                                                                           data-url-rating="{{ url.rating }}"
+                                                                           data-url-user-response="{{ url.user_response }}"
+                                                                           data-url-date="{{ url.created_at|date:'Y-m-d H:i' }}">
+                                                                           View
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <!-- Subscription History Tab -->
+                                <div class="tab-pane fade" id="subscription-history" role="tabpanel" aria-labelledby="subscription-history-tab">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped table-bordered" id="subscription-history-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Id</th>
+                                                    <th>Plan</th>
+                                                    <th>Duration</th>
+                                                    <th>Status</th>
+                                                    <th>Period</th>
+                                                    <th>URLs</th>
+                                                    <th>Price</th>
+                                                    <th>Payment</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for sub in subscription_history %}
+                                                <tr>
+                                                    <td>{{ forloop.counter }}</td>
+                                                    <td>{{ sub.subscription.name_en }}</td>
+                                                    <td>{{ sub.subscription.get_duration_display }}</td>
+                                                    <td>
+                                                        <span class="subscription-badge badge-{{ sub.get_status_display|lower }}">{{ sub.get_status_display }}</span>
+                                                    </td>
+                                                    <td>
+                                                        {{ sub.start_date|date:"M d, Y" }}<br>
+                                                        {{ sub.end_date|date:"M d, Y" }}
+                                                    </td>
+                                                    <td>{{ sub.used_url }}/{{ sub.allowed_url }}</td>
+                                                    <td>${{ sub.amount_paid }}</td>
+                                                    <td>
+                                                        {{ sub.payment_method|default:"-" }}<br>
+                                                        <small>{{ sub.transaction_id|default:"" }}</small>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View URL Modal -->
+<div class="modal fade" id="viewURLModal" tabindex="-1" aria-labelledby="viewURLModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content custom-modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewURLModalLabel">URL Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="url-detail-card mb-4">
+                    <h6 class="url-detail-title">URL Information</h6>
+                    <div class="url-content mb-3" id="view-url-full">
+                        <!-- URL will be inserted here -->
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <p><strong>Domain:</strong> <span id="view-domain">Loading...</span></p>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <p><strong>Date Checked:</strong> <span id="view-date">Loading...</span></p>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <p><strong>User Response:</strong> 
+                                <span id="view-user-response" class="subscription-badge badge-3">Loading...</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-12 col-md-6">
+                        <div class="url-detail-card">
+                            <h6 class="url-detail-title">SSL Details</h6>
+                            <p><strong>SSL Status:</strong> <span id="view-ssl-status">Loading...</span></p>
+                            <p><strong>Expiry Days:</strong> <span id="view-ssl-expiry">Loading...</span></p>
+                            <p><strong>Validity:</strong> <span id="view-ssl-validity">Loading...</span></p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="url-detail-card">
+                            <h6 class="url-detail-title">Security Rating</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="me-3">
+                                    <span class="rating-value" id="view-rating-value">0</span>/10
+                                </div>
+                                <div class="flex-grow-1">
+                                    <p class="rating-label mb-1">Rating</p>
+                                    <div class="progress rating-progress">
+                                        <div class="progress-bar" id="view-rating-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p><strong>Reputation:</strong> <span id="view-reputation">Loading...</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="url-detail-card mt-4">
+                    <h6 class="url-detail-title">Security Analysis</h6>
+                    <div class="mb-3">
+                        <p><strong>Known Threats:</strong></p>
+                        <div class="threat-container" id="view-threats-container">
+                            <span class="text-muted">Loading threats...</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <p><strong>Domain History:</strong></p>
+                        <p id="view-domain-history" class="text-muted">Loading history...</p>
+                    </div>
+                    <div>
+                        <p><strong>Recommendation:</strong></p>
+                        <p id="view-recommendation" class="text-muted">Loading recommendation...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scriptcontent %}
+<!-- Plugins JS start-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/js/datatable/datatables/datatable.custom.js' %}"></script>
+<script src="{% static 'assets/js/tooltip-init.js' %}"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initialize DataTables
+        let urlHistoryTable = $('#url-history-table').DataTable({
+            responsive: true,
+            language: {
+                emptyTable: "No URL history found"
+            }
+        });
+        
+        let subscriptionHistoryTable = $('#subscription-history-table').DataTable({
+            responsive: true,
+            language: {
+                emptyTable: "No subscription history found"
+            }
+        });
+
+        // Adjust DataTables when tabs are switched
+        $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+            const target = $(e.target).attr("href");
+            if (target === "#url-history") {
+                urlHistoryTable.columns.adjust().responsive.recalc();
+            } else if (target === "#subscription-history") {
+                subscriptionHistoryTable.columns.adjust().responsive.recalc();
+            }
+        });
+        
+        // Initialize the modal
+        const viewURLModal = new bootstrap.Modal(document.getElementById('viewURLModal'));
+        
+        // Handle click on action menus
+        document.addEventListener('click', function(event) {
+            const isMenuClick = event.target.closest('.three-dots-menu');
+            const isActionCardClick = event.target.closest('.action-card');
+            
+            // Close all menus if clicking outside
+            if (!isMenuClick && !isActionCardClick) {
+                document.querySelectorAll('.action-card').forEach(card => {
+                    card.style.display = 'none';
+                });
+            }
+            
+            // Handle menu button click
+            if (isMenuClick) {
+                event.preventDefault();
+                const actionCard = isMenuClick.nextElementSibling;
+                const isVisible = actionCard.style.display === 'block';
+                
+                // Close all other menus first
+                document.querySelectorAll('.action-card').forEach(card => {
+                    if (card !== actionCard) {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Toggle current menu
+                actionCard.style.display = isVisible ? 'none' : 'block';
+            }
+        });
+        
+        // Handle click on view URL buttons
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('view-url-btn') || event.target.closest('.view-url-btn')) {
+                event.preventDefault();
+                const button = event.target.classList.contains('view-url-btn') ? 
+                    event.target : event.target.closest('.view-url-btn');
+                
+                // Close any open action menus first
+                document.querySelectorAll('.action-card').forEach(card => {
+                    card.style.display = 'none';
+                });
+                
+                // Get all data attributes
+                const domain = button.getAttribute('data-url-domain') || '';
+                const fullUrl = button.getAttribute('data-url-full') || '';
+                const sslStatus = button.getAttribute('data-url-ssl-status') || 'Unknown';
+                const sslExpiry = button.getAttribute('data-url-ssl-expiry') || 'N/A';
+                const sslValidity = button.getAttribute('data-url-ssl-validity') || 'N/A';
+                const reputation = button.getAttribute('data-url-reputation') || 'Unknown';
+                const threats = button.getAttribute('data-url-threats') || '';
+                const history = button.getAttribute('data-url-history') || 'No history available';
+                const recommendation = button.getAttribute('data-url-recommendation') || 'No recommendation available';
+                const rating = parseInt(button.getAttribute('data-url-rating')) || 0;
+                const userResponse = parseInt(button.getAttribute('data-url-user-response'));
+                const date = button.getAttribute('data-url-date') || 'Date not available';
+                console.log(userResponse);
+
+                // Set URL and meta info
+                document.getElementById('view-domain').textContent = domain || 'Not available';
+                document.getElementById('view-url-full').textContent = fullUrl || 'Not available';
+                document.getElementById('view-date').textContent = date;
+                
+                // Set SSL info
+                document.getElementById('view-ssl-status').textContent = sslStatus;
+                document.getElementById('view-ssl-expiry').textContent = sslExpiry ? `${sslExpiry} days` : 'N/A';
+                document.getElementById('view-ssl-validity').textContent = sslValidity;
+                
+                // Set rating
+                document.getElementById('view-rating-value').textContent = rating;
+                const ratingBar = document.getElementById('view-rating-bar');
+                ratingBar.style.width = `${rating * 10}%`;
+                ratingBar.setAttribute('aria-valuenow', rating);
+                
+                // Set color based on rating
+                if (rating >= 7) {
+                    ratingBar.className = 'progress-bar bg-success';
+                } else if (rating >= 4) {
+                    ratingBar.className = 'progress-bar bg-warning';
+                } else {
+                    ratingBar.className = 'progress-bar bg-danger';
+                }
+                
+                // Set reputation
+                document.getElementById('view-reputation').textContent = reputation;
+                
+                // Set user response - fix the condition checks
+                const userResponseElement = document.getElementById('view-user-response');
+                if (userResponse === 0) {
+                    userResponseElement.textContent = 'Unsafe';
+                    userResponseElement.className = 'subscription-badge badge-2';
+                } else if (userResponse === 1) {
+                    userResponseElement.textContent = 'Safe';
+                    userResponseElement.className = 'subscription-badge badge-1';
+                } else {
+                    userResponseElement.textContent = 'No Response';
+                    userResponseElement.className = 'subscription-badge badge-3';
+                }
+                
+                // Set threats
+                const threatsContainer = document.getElementById('view-threats-container');
+                threatsContainer.innerHTML = '';
+                
+                if (threats && threats !== 'null' && threats !== '') {
+                    const threatList = threats.split(',');
+                    threatList.forEach(threat => {
+                        if (threat.trim()) {
+                            const badge = document.createElement('span');
+                            badge.className = 'threat-badge';
+                            badge.textContent = threat.trim();
+                            threatsContainer.appendChild(badge);
+                        }
+                    });
+                }
+                
+                if (threatsContainer.children.length === 0) {
+                    threatsContainer.innerHTML = '<span class="text-muted">No threats detected</span>';
+                }
+                
+                // Set domain history and recommendation
+                document.getElementById('view-domain-history').textContent = history;
+                document.getElementById('view-recommendation').textContent = recommendation;
+                
+                // Show the modal
+                viewURLModal.show();
+            }
+        });
+    });
+</script>
+{% endblock %}

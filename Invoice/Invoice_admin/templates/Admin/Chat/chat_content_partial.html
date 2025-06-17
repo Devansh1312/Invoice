@@ -1,0 +1,130 @@
+{% load static %}
+<style>
+    /* Message styling */
+    .message {
+        max-width: 70%;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    /* Incoming messages (from others) */
+    .message.incoming {
+        background: #ffffff;
+        border-top-left-radius: 0;
+        margin-right: auto;
+        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    }
+
+    /* Outgoing messages (from you) */
+    .message.outgoing {
+        background: #d9fdd3;
+        border-top-right-radius: 0;
+        margin-left: auto;
+        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+    }
+
+    /* Message time styling */
+    .message-time {
+        font-size: 11px;
+        color: #667781;
+        text-align: right;
+        margin-top: 3px;
+    }
+
+    /* Chat messages container */
+    #chat-messages {
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        overflow-y: auto;
+        flex-grow: 1;
+        background-color: #e5ddd5;
+        background-image: url('{% static "assets/images/chat-bg.png" %}');
+        background-blend-mode: overlay;
+    }
+    
+    /* Mobile-specific styles */
+    @media (max-width: 767px) {
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+        }
+        
+        .message-time {
+            font-size: 10px;
+        }
+        
+        #chat-messages {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .chat-header {
+            padding: 8px 10px;
+        }
+        
+        .chat-input {
+            padding: 8px 10px;
+        }
+        
+        #message-input {
+            height: 45px;
+            font-size: 16px;
+        }
+        
+        .chat-input .btn {
+            height: 45px;
+            width: 45px;
+        }
+    }
+</style>
+<div class="chat-header d-flex align-items-center p-3 border-bottom">
+    <button class="btn btn-sm d-md-none me-2 toggle-chat-list">
+        <i class="icon-arrow-left"></i>
+    </button>
+    <div class="flex-shrink-0">
+        {% if chat.user.profile_picture %}
+        <img class="rounded-circle" src="{{ chat.user.profile_picture.url }}" width="40" height="40" alt="img">
+        {% else %}
+        <img class="rounded-circle" src="{% static 'assets/images/dashboard/profile.jpg' %}" width="40" height="40" alt="img">
+        {% endif %}
+    </div>
+    <div class="flex-grow-1 ms-3">
+        <h6 class="mb-0">{{ chat.user.name }}</h6>
+        <small class="text-muted">
+            {% if chat.is_active %}
+            <span class="text-success">●</span> Online
+            {% else %}
+            <span class="text-secondary">●</span> Offline
+            {% endif %}
+        </small>
+    </div>
+    <div class="dropdown">
+        <!-- Your dropdown menu -->
+    </div>
+</div>
+
+<div class="chat-messages" id="chat-messages">
+    {% for message in chat.messages.all %}
+    <div class="d-flex {% if message.sender == request.user %}justify-content-end{% else %}justify-content-start{% endif %} mb-3">
+        <div class="message {% if message.sender == request.user %}outgoing{% else %}incoming{% endif %}" data-message-id="{{ message.id }}">
+            <div class="message-text">{{ message.message }}</div>
+            <div class="message-time">
+                {{ message.timestamp|date:"M d, Y H:i" }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="chat-input">
+    <form id="message-form" class="d-flex align-items-center">
+        <input type="text" id="message-input" class="form-control me-2" placeholder="Type a message...">
+        <button type="submit" class="btn btn-primary">
+            <i class="fa fa-paper-plane"></i>
+        </button>
+    </form>
+</div>

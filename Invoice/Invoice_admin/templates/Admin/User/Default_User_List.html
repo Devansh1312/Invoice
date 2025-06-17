@@ -1,0 +1,297 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% load sass_tags %} 
+
+{% block css %}
+<!-- Plugins css start-->
+<link rel="stylesheet" type="text/css" href="{% sass_src 'assets/scss/vendors/datatables.scss' %}">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<!-- Plugins css Ends--> 
+{% endblock %} 
+
+{% block title %}Default User List{% endblock %} 
+
+{% block content %} 
+<div class="page-body">
+   <div class="container-fluid">
+      <div class="page-title">
+         <div class="row">
+            <div class="col-6">
+               <h3>{{ breadcrumb.child }}</h3>
+            </div>
+            <div class="col-6"></div>
+         </div>
+      </div>
+      <div class="row">
+         <div class="col-sm-12">
+            <div class="card">
+               <div class="card-body">
+                  <div class="table-responsive">
+                     <table class="display" id="default-user-table">
+                        <thead>
+                           <tr>
+                              <th data-data="id">No.</th>
+                              <th data-data="username">Username</th>
+                              <th data-data="name">Name</th>
+                              <th data-data="email">Email</th>
+                              <th data-data="phone">Phone</th>
+                              <th data-data="is_active">Status</th>
+                              <th data-data="actions">Actions</th>
+                           </tr>
+                        </thead>
+                        <tbody>
+                           <!-- Data will be loaded via AJAX -->
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Add responsive styles -->
+<style>
+   @media (max-width: 767px) {
+      .table-responsive {
+         overflow-x: auto;
+         -webkit-overflow-scrolling: touch;
+      }
+
+      .table th, .table td {
+         padding: 8px;
+         font-size: 12px;
+      }
+
+      .three-dots-menu {
+         font-size: 20px;
+         display: block;
+         margin: 0 auto;
+         padding: 10px;
+         cursor: pointer;
+      }
+
+      .action-card {
+         width: 120px;
+      }
+
+      .table th {
+         text-align: left;
+      }
+
+      /* For active and deactive status */
+      .text-success {
+         color: green;
+         font-weight: bold;
+      }
+
+      .text-danger {
+         color: red;
+         font-weight: bold;
+      }
+
+      .action-menu-container {
+         display: block;
+         position: relative;
+      }
+   }
+
+   /* Additional styling for tablet and larger screens */
+   @media (min-width: 768px) {
+      .three-dots-menu {
+         font-size: 18px;
+      }
+   }
+</style>
+
+{% endblock %} 
+
+{% block scriptcontent %}
+<!-- Plugins JS start-->
+<script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'assets/js/datatable/datatables/datatable.custom.js' %}"></script>
+<script src="{% static 'assets/js/tooltip-init.js' %}"></script>
+<!-- Plugins JS Ends-->
+
+<script>
+// Initialize DataTable with server-side processing
+$(document).ready(function() {
+    var table = $('#default-user-table').DataTable({
+        "processing": true,
+        "serverSide": true,
+        "ajax": {
+            "url": window.location.href,
+            "type": "GET"
+        },
+        "columns": [
+            {"data": "id"},
+            {"data": "username"},
+            {"data": "name"},
+            {"data": "email"},
+            {"data": "phone"},
+            {
+                "data": "is_active",
+                "render": function(data, type, row) {
+                    return data ? 
+                        '<span class="text-success">Active</span>' : 
+                        '<span class="text-danger">Deactive</span>';
+                }
+            },
+            // In your DataTable columns definition, fix the actions column:
+            {
+               "data": "actions",
+               "render": function(data, type, row) {
+                  // Determine what action should be performed
+                  const actionToPerform = row.is_active ? 'deactivate' : 'activate';
+                  const actionLabel = row.is_active ? 'Deactivate' : 'Activate';
+                  
+                  return `
+                        <div class="action-menu-container" style="position: relative; display: inline-block;">
+                           <a href="#" class="three-dots-menu">
+                              <i data-feather="more-vertical"></i>
+                           </a>
+                           <div class="action-card" style="display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); z-index: 10; width: auto;">
+                              <ul style="list-style: none; padding: 0; margin: 0;">
+                                    <li style="padding: 8px 12px; border-top: 1px solid #eee; font-size: small;">
+                                       <a href="#" class="toggle-status" data-id="${data}" data-status="${actionToPerform}">
+                                          ${actionLabel}
+                                       </a>
+                                       <form id="status-form-${data}" method="post" action="user/${data}/toggle-status/" style="display: none;">
+                                          <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                                          <input type="hidden" name="source_page" value="default_user_list">
+                                          <input type="hidden" name="title" value="Default User">
+                                          <input type="hidden" name="status" value="${actionToPerform}">
+                                       </form>
+                                    </li>
+                                    <li style="padding: 8px 12px; border-top: 1px solid #eee; font-size: small;">
+                                       <a href="#" class="view-details" data-id="${data}">View</a>
+                                       <form id="view-form-${data}" method="post" action="detail/${data}/" style="display: none;">
+                                          <input type="hidden" name="csrfmiddlewaretoken" value="${getCookie('csrftoken')}">
+                                          <input type="hidden" name="user_id" value="${data}">
+                                          <input type="hidden" name="source_page" value="default_user_list">
+                                          <input type="hidden" name="title" value="Default User">
+                                       </form>
+                                    </li>
+                              </ul>
+                           </div>
+                        </div>
+                  `;
+               }
+            }
+        ],
+        "responsive": true,
+        "lengthMenu": [10, 25, 50, 100],
+        "pageLength": 10
+    });
+
+    // Function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Toggle User Status
+    $(document).on('click', '.toggle-status', function(e) {
+        e.preventDefault();
+        var userId = $(this).data('id');
+        var form = $('#status-form-' + userId);
+        form.submit();
+    });
+
+    // View User Details
+    $(document).on('click', '.view-details', function(e) {
+        e.preventDefault();
+        var userId = $(this).data('id');
+        var form = $('#view-form-' + userId);
+        form.submit();
+    });
+
+    // Toggle action menu
+    $(document).on('click', '.three-dots-menu', function(e) {
+        e.preventDefault();
+        var actionCard = $(this).next('.action-card');
+        $('.action-card').not(actionCard).hide();
+        actionCard.toggle();
+    });
+
+    // Hide action card if clicking outside
+    $(document).click(function(e) {
+        if (!$(e.target).closest('.action-menu-container').length) {
+            $('.action-card').hide();
+        }
+    });
+    
+    // Initialize Feather icons after DataTable is drawn
+    table.on('draw', function() {
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+    });
+});
+</script>
+
+<!-- Add responsive styles -->
+<style>
+   @media (max-width: 767px) {
+      .table-responsive {
+         overflow-x: auto;
+         -webkit-overflow-scrolling: touch;
+      }
+
+      .table th, .table td {
+         padding: 8px;
+         font-size: 12px;
+      }
+
+      .three-dots-menu {
+         font-size: 20px;
+         display: block;
+         margin: 0 auto;
+         padding: 10px;
+         cursor: pointer;
+      }
+
+      .action-card {
+         width: 120px;
+      }
+
+      .table th {
+         text-align: left;
+      }
+
+      /* For active and deactive status */
+      .text-success {
+         color: green;
+         font-weight: bold;
+      }
+
+      .text-danger {
+         color: red;
+         font-weight: bold;
+      }
+
+      .action-menu-container {
+         display: block;
+         position: relative;
+      }
+   }
+
+   /* Additional styling for tablet and larger screens */
+   @media (min-width: 768px) {
+      .three-dots-menu {
+         font-size: 18px;
+      }
+   }
+</style>
+{% endblock %}

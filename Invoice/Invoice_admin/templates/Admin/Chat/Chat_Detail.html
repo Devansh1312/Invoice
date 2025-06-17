@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load sass_tags %}
+
+{% block css %}
+<style>
+    .chat-container {
+        height: calc(100vh - 300px);
+        overflow-y: auto;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+    .message-container {
+        display: flex;
+        margin-bottom: 15px;
+        gap: 10px;
+    }
+    .message {
+        padding: 10px 15px;
+        border-radius: 10px;
+        max-width: 70%;
+        word-wrap: break-word;
+        position: relative;
+    }
+    .user-message {
+        background-color: #e3f2fd;
+        margin-right: auto;
+    }
+    .admin-message {
+        background-color: #d1e7dd;
+        margin-left: auto;
+    }
+    .message-time {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+        text-align: right;
+    }
+    .profile-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .user-message-container {
+        flex-direction: row;
+    }
+    .admin-message-container {
+        flex-direction: row-reverse;
+    }
+    
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+        /* Adjust chat container to fill more space on mobile */
+        .chat-container {
+            height: calc(100vh - 220px);
+            padding: 10px;
+        }
+        
+        /* Make messages slightly wider on mobile */
+        .message {
+            max-width: 80%;
+        }
+        
+        /* Make input area more touch-friendly */
+        #messageInput {
+            height: 45px;
+            font-size: 16px;
+            padding: 10px 15px;
+        }
+        
+        /* Make send button larger for touch */
+        .input-group .btn {
+            height: 45px;
+            width: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Ensure back button is visible and prominent */
+        .breadcrumb .btn {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+        
+        /* Better scrolling on mobile */
+        .chat-container {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Fixed page header for better space usage */
+        .page-title {
+            margin-bottom: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block title %}Chat Detail{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <div class="container-fluid">
+        <div class="page-title">
+            <div class="row">
+                <div class="col-6">
+                    <h3></h3>
+                </div>
+                <div class="col-6">
+                    <ol class="breadcrumb">
+                        <a href="{% url 'admin_chat_list' %}" class="btn btn-secondary" style="float: right;">
+                            <i class="fa fa-arrow-left"></i> Back 
+                        </a>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                {% if chat.user.profile_picture %}
+                                <img src="{{ chat.user.profile_picture.url }}" class="profile-pic me-3" alt="{{ chat.user.name }}">
+                                {% else %}
+                                <img src="{% static 'assets/images/dashboard/profile.jpg' %}" class="profile-pic me-3" alt="{{chat.user.profile_picture}}">
+                                {% endif %}
+                                <h5>Chat with {{ chat.user.name }}</h5>
+                            </div>
+                            <div>
+                                <span class="badge bg-{% if chat.is_active %}success{% else %}danger{% endif %}">
+                                    {% if chat.is_active %}Active{% else %}Closed{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="chat-container" id="chatContainer">
+                                    {% for message in chat_messages %}
+                                    <div class="message-container {% if message.is_from_user %}user-message-container{% else %}admin-message-container{% endif %}">
+                                        {% if message.is_from_user %}
+                                            {% if chat.user.profile_picture %}
+                                            <img src="{{ chat.user.profile_picture.url }}" class="profile-pic" alt="{{ chat.user.name }}">
+                                            {% else %}
+                                            <img src="{% static 'assets/images/dashboard/profile.jpg' %}" class="profile-pic" alt="Default profile">
+                                            {% endif %}
+                                        {% else %}
+                                            {% if message.sender.profile_picture %}
+                                            <img src="{{ message.sender.profile_picture.url }}" class="profile-pic" alt="{{ message.sender.name }}">
+                                            {% else %}
+                                            <img src="{% static 'assets/images/dashboard/profile.jpg' %}" class="profile-pic" alt="Default profile">
+                                            {% endif %}
+                                        {% endif %}
+                                        <div class="message {% if message.is_from_user %}user-message{% else %}admin-message{% endif %}" data-message-id="{{ message.id }}">
+                                            <div class="message-content">
+                                                {{ message.message }}
+                                            </div>
+                                            <div class="message-time">
+                                                {{ message.timestamp|date:"M d, Y H:i" }}
+                                                {% if not message.is_from_user and message.is_read %}
+                                                <i class="fa fa-check text-primary" title="Read"></i>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <div class="text-center text-muted py-4">
+                                        No messages yet. Start the conversation!
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-12">
+                                <form id="chatForm" method="post" action="{% url 'admin_chat_detail' chat.user.id %}">
+                                    {% csrf_token %}
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="messageInput" name="message" placeholder="Type your message..." required>
+                                        <button class="btn btn-primary" type="submit">
+                                            <i class="fa fa-paper-plane"></i> Send
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const chatContainer = document.getElementById('chatContainer');
+        const chatForm = document.getElementById('chatForm');
+        const messageInput = document.getElementById('messageInput');
+        
+        // Auto-scroll to bottom of chat
+        function scrollToBottom() {
+            if (chatContainer) {
+                setTimeout(() => {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 50);
+            }
+        }
+        
+        // Execute scroll on page load
+        scrollToBottom();
+        
+        // Last message ID to track new messages
+        let lastMessageId = {% if chat_messages.last %}{{ chat_messages.last.id }}{% else %}0{% endif %};
+        
+        // Track IDs of messages we've already displayed
+        const displayedMessageIds = new Set();
+        {% for message in chat_messages %}
+            displayedMessageIds.add({{ message.id }});
+        {% endfor %}
+        
+        // Function to add a new message to the chat
+        function addMessage(message, isFromUser) {
+            // Check if we've already displayed this message
+            if (displayedMessageIds.has(message.id)) {
+                return;
+            }
+            
+            const messageContainer = document.createElement('div');
+            messageContainer.className = `message-container ${isFromUser ? 'user-message-container' : 'admin-message-container'}`;
+            
+            const profilePic = document.createElement('img');
+            profilePic.className = 'profile-pic';
+            if (message.sender_pic) {
+                profilePic.src = message.sender_pic;
+            } else {
+                profilePic.src = "{% static 'assets/images/dashboard/profile.jpg' %}";
+            }
+            profilePic.alt = "Profile picture";
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isFromUser ? 'user-message' : 'admin-message'}`;
+            messageDiv.dataset.messageId = message.id;
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">${message.message}</div>
+                <div class="message-time">
+                    ${message.timestamp}
+                    ${!isFromUser && message.is_read ? '<i class="fa fa-check text-primary" title="Read"></i>' : ''}
+                </div>
+            `;
+            
+            messageContainer.appendChild(profilePic);
+            messageContainer.appendChild(messageDiv);
+            chatContainer.appendChild(messageContainer);
+            
+            // Auto-scroll to bottom when new message is added
+            scrollToBottom();
+            
+            // Add to our set of displayed messages
+            displayedMessageIds.add(message.id);
+            
+            // Update lastMessageId if this is newer
+            if (message.id > lastMessageId) {
+                lastMessageId = message.id;
+            }
+        }
+        
+        // Function to fetch new messages
+        function fetchNewMessages() {
+            fetch(`{% url 'admin_chat_detail' chat.user.id %}?last_id=${lastMessageId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages && data.messages.length > 0) {
+                    data.messages.forEach(msg => {
+                        addMessage(msg, msg.is_from_user);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching messages:', error);
+            });
+        }
+        
+        // Check for new messages every 5 seconds
+        let refreshInterval = setInterval(fetchNewMessages, 5000);
+        
+        // Handle form submission with AJAX
+        if (chatForm) {
+            chatForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(chatForm);
+                
+                // Don't send empty messages
+                const messageContent = messageInput.value.trim();
+                if (!messageContent) {
+                    return;
+                }
+                
+                // Temporarily stop the refresh while sending
+                clearInterval(refreshInterval);
+                
+                // Disable the input field and submit button during send
+                messageInput.disabled = true;
+                const submitButton = chatForm.querySelector('button[type="submit"]');
+                if (submitButton) submitButton.disabled = true;
+                
+                fetch(chatForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Add the message immediately from the response
+                        addMessage(data.message, false);
+                        messageInput.value = '';
+                        
+                        // Update lastMessageId
+                        if (data.message.id > lastMessageId) {
+                            lastMessageId = data.message.id;
+                        }
+                    } else {
+                        alert(data.message || 'Error sending message');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error sending message');
+                })
+                .finally(() => {
+                    // Re-enable the input field and submit button
+                    messageInput.disabled = false;
+                    if (submitButton) submitButton.disabled = false;
+                    messageInput.focus();
+                    
+                    // Restart the refresh interval
+                    refreshInterval = setInterval(fetchNewMessages, 5000);
+                });
+            });
+        }
+
+        // Ensure scroll to bottom on window resize
+        window.addEventListener('resize', scrollToBottom);
+        
+        // Set focus on message input after page load
+        if (messageInput) {
+            messageInput.focus();
+        }
+        
+        // Handle device orientation change (for mobile devices)
+        window.addEventListener('orientationchange', function() {
+            // Short timeout to allow the browser to complete the orientation change
+            setTimeout(scrollToBottom, 300);
+        });
+    });
+</script>
+{% endblock %}

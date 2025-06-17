@@ -1,0 +1,51 @@
+{% load static %}
+{% for chat in chats %}
+<div class="chat-item {% if chat.unread_admin_count > 0 %}unread{% endif %}" 
+     data-chat-id="{{ chat.id }}" 
+     data-user-id="{{ chat.user.id }}">
+    <div class="d-flex align-items-center">
+        <div class="flex-shrink-0 position-relative">
+            {% if chat.user.profile_picture %}
+            <img class="rounded-circle" src="{{ chat.user.profile_picture.url }}" width="50" height="50" alt="img">
+            {% else %}
+            <img class="rounded-circle" src="{% static 'assets/images/dashboard/profile.jpg' %}" width="50" height="50" alt="img">
+            {% endif %}
+            <span class="position-absolute bottom-0 end-0 bg-{% if chat.is_active %}success{% else %}danger{% endif %} border border-2 border-white rounded-circle" style="width: 12px; height: 12px;"></span>
+        </div>
+        <div class="flex-grow-1 ms-3 overflow-hidden">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 text-truncate">{{ chat.user.name }}</h6>
+                <small class="chat-time">
+                    {% with last_message=chat.messages.last %}
+                    {% if last_message %}
+                    {{ last_message.timestamp|time }}
+                    {% endif %}
+                    {% endwith %}
+                </small>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="last-message mb-0 text-truncate">
+                    {% with last_message=chat.messages.last %}
+                    {% if last_message %}
+                    {{ last_message.message|truncatechars:30 }}
+                    {% else %}
+                    No messages yet
+                    {% endif %}
+                    {% endwith %}
+                </p>
+                {% if chat.unread_admin_count > 0 %}
+                <span class="unread-count">{{ chat.unread_admin_count }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="empty-chat-list">
+    <div class="bg-light rounded-circle p-4 mb-3">
+        <i class="icon-message-square text-muted" style="font-size: 2rem;"></i>
+    </div>
+    <h5 class="mb-2">No chats available</h5>
+    <p class="text-muted">When you have active chats, they will appear here</p>
+</div>
+{% endfor %}
