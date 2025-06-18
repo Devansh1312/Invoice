@@ -23,16 +23,10 @@ urlpatterns = [
     #Logout URL
     path('logout/', logout_view, name='logout'),  # Add the logout path here
 
-    # forgot password URL
-    path('forgot-password/', ForgotPasswordAdminView.as_view(), name='Forgot_Password_Admin'),
-    path('verify-otp-admin/', VerifyOTPAdminView.as_view(), name='verify_otp_admin'),
-    path('reset-password-admin/', ResetPasswordAdminView.as_view(), name='reset_password_admin'),
-
     path('System-Settings/', System_Settings.as_view(),name="System_Settings"),
     path('user_profile/',UserProfileView.as_view(),name='user_profile'),
     path('edit_profile/', UserUpdateProfileView.as_view(), name='edit_profile'),
     path('change_password_ajax/', change_password_ajax, name='change_password_ajax'),
-
 
     #User Role URL
     path('user-roles/', RoleView.as_view(), name='role_list'),
