@@ -281,29 +281,6 @@ def authenticate_username_email_or_phone(login_input, password):
 ################################ Dashboard View ##########################################
 @method_decorator(permission_required('view_dashboard'), name='dispatch')
 class Dashboard(LoginRequiredMixin, View):
-
-    def get_monthly_invoice_stats(self):
-        """Get invoice stats for last 12 months by month"""
-        twelve_months_ago = timezone.now() - timedelta(days=365)
-        
-        # Organize data for chart
-        months = []
-        invoice_counts = []
-        revenue_data = []
-        
-        # Initialize data for last 12 months
-        for i in range(12):
-            date = timezone.now() - timedelta(days=30*(11-i))
-            months.append(date.strftime("%b %Y"))
-            invoice_counts.append(0)
-            revenue_data.append(0)
-        
-        return {
-            'months': months,
-            'invoice_counts': invoice_counts,
-            'revenue_data': revenue_data
-        }
-    
     def get(self, request, *args, **kwargs):
         # Get user counts by role
         role_counts = Role.objects.annotate(
@@ -327,10 +304,7 @@ class Dashboard(LoginRequiredMixin, View):
         annual_revenue = Invoice.objects.filter(
             bill_date__year=current_year
         ).aggregate(total=Sum('total_amount'))['total'] or 0
-        
-        # Get monthly stats for charts
-        monthly_stats = self.get_monthly_invoice_stats()
-        
+
         context = {
             'role_counts': role_counts,
             'total_users': total_users,
@@ -338,9 +312,6 @@ class Dashboard(LoginRequiredMixin, View):
             'total_revenue': total_revenue,
             'monthly_revenue': monthly_revenue,
             'annual_revenue': annual_revenue,
-            'months': monthly_stats['months'],
-            'invoice_counts': monthly_stats['invoice_counts'],
-            'revenue_data': monthly_stats['revenue_data'],
         }
         
         return render(request, "Admin/Dashboard.html", context)
