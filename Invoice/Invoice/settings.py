@@ -92,27 +92,21 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Invoice.wsgi.application'
 
 
-# # Database
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'invoice',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'HOST': 'localhost',
-#         'PORT': '3306',
-#          'OPTIONS': {
-#             'charset': 'utf8mb4',  # Set charset to utf8mb4 to support emojis
-#         }
-#     }
-# }
-
+# Database
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',  # default path for SQLite3 database
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'invoice',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': 'localhost',
+        'PORT': '3306',
+         'OPTIONS': {
+            'charset': 'utf8mb4',  # Set charset to utf8mb4 to support emojis
+        }
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
