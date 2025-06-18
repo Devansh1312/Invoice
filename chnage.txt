@@ -1,0 +1,28 @@
+import os
+import sys
+import logging
+
+# Configure logging
+logging.basicConfig(
+    filename='/home/redspar2/logs/passenger_wsgi.log',
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s: %(message)s'
+)
+
+# Calculate paths
+PROJECT_DIR = '/home/redspar2/shayek'  # Where manage.py lives
+DJANGO_PROJECT_DIR = os.path.join(PROJECT_DIR, 'shayek')  # Where wsgi.py lives
+
+# Add to Python path
+sys.path.insert(0, PROJECT_DIR)
+sys.path.insert(0, DJANGO_PROJECT_DIR)
+
+# Set environment
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'shayek.settings')
+
+try:
+    from shayek.wsgi import application
+    logging.info("WSGI application loaded successfully")
+except Exception as e:
+    logging.error("Failed to load WSGI application: %s", str(e))
+    raise
