@@ -7,6 +7,8 @@ from django.db import models
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password, check_password
 from datetime import datetime 
+from decimal import Decimal
+from num2words import num2words
 
 
 
@@ -155,7 +157,6 @@ class SystemSettings(models.Model):
 
 
 class Invoice(models.Model):
-
     BILL_TEMPLATE_CHOICES = [
         ('1', 'હરેશ એ પટેલ'),
         ('2', 'ખોડલ વોટર સપ્લાયર્સ'),
@@ -163,23 +164,98 @@ class Invoice(models.Model):
     ]
 
     id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)  # Assuming User model exists
     bill_template = models.CharField(max_length=10, choices=BILL_TEMPLATE_CHOICES)
-    bill_number = models.CharField(max_length=100)
+    bill_number = models.CharField(max_length=100, unique=True, blank=True)
     bill_date = models.DateField()
-    bill_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    jug = models.IntegerField(default=0)
+    bill_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    
+    # Jug fields
+    jug = models.IntegerField(default=0)  # For backward compatibility
     jug_count = models.IntegerField(default=0)
-    jug_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    bottle = models.IntegerField(default=0)
+    jug_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('25.00'))
+    
+    # Bottle fields
+    bottle = models.IntegerField(default=0)  # For backward compatibility
     bottle_count = models.IntegerField(default=0)
-    bottle_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    bottle_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('25.00'))
+    
+    # Other charges
+    other = models.CharField(max_length=255, null=True, blank=True)
+    other_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+
+    # Total amount
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+
+    # Timestamps
     bill_created_at = models.DateTimeField(auto_now_add=True)
     bill_updated_at = models.DateTimeField(auto_now=True)
 
+    @staticmethod
+    def number_to_words(number):
+        """Convert number to words"""
+        try:
+            return num2words(float(number), lang='en').title() + " Only"
+        except:
+            return "Zero Only"
+
+    @property
+    def jug_total(self):
+        """Calculate jug total amount"""
+        return Decimal(str(self.jug_count)) * self.jug_amount
+
+    @property
+    def bottle_total(self):
+        """Calculate bottle total amount"""
+        return Decimal(str(self.bottle_count)) * self.bottle_amount
+
+    @property
+    def total_amount_in_words(self):
+        """Get total amount in words"""
+        return self.number_to_words(self.total_amount)
+
+    @classmethod
+    def generate_bill_number(cls):
+        """Generate unique bill number"""
+        current_year = timezone.now().year
+        # Get the last invoice for the current year
+        last_invoice = cls.objects.filter(
+            bill_number__startswith=str(current_year)
+        ).order_by('-bill_number').first()
+        
+        if last_invoice:
+            try:
+                # Extract the sequence number from the last bill number
+                last_number = int(last_invoice.bill_number[-4:])
+            except (ValueError, IndexError):
+                last_number = 0
+        else:
+            last_number = 0
+        
+        new_number = last_number + 1
+        return f"{current_year}{new_number:04d}"
+
+    def save(self, *args, **kwargs):
+        """Override save method to auto-generate bill number and calculate totals"""
+        # Generate bill number if not exists
+        if not self.bill_number:
+            self.bill_number = self.generate_bill_number()
+        
+        # Calculate total amount
+        self.total_amount = self.jug_total + self.bottle_total + self.other_amount
+        
+        # Set bill_amount to match total_amount
+        self.bill_amount = self.total_amount
+        
+        # Sync jug and bottle fields for backward compatibility
+        self.jug = self.jug_count
+        self.bottle = self.bottle_count
+        
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.bill_number
-    
+        return f"{self.bill_number} - {self.user.name if hasattr(self.user, 'name') else self.user.username}"
+
     class Meta:
         db_table = 'invoice_invoice'
+        ordering = ['-bill_date', '-bill_created_at']

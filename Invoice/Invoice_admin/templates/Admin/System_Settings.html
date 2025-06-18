@@ -16,13 +16,12 @@
             <div class="col-6"></div>
          </div>
      </div>
-    <div class="row" style="margin-top: 10px; margin-bottom: 10px ; ">
-        <!-- <div class="col-6 col-md-6">
-           <h3>{{breadcrumb.child}}</h3>
-        </div> -->
+    <div class="row" style="margin-top: 10px; margin-bottom: 10px ;">
      </div>
     <div class="card">
-         <form class="form theme-form" method="post" enctype="multipart/form-data"> {% csrf_token %} <div class="card-body">
+         <form class="form theme-form" method="post" enctype="multipart/form-data"> 
+         {% csrf_token %} 
+         <div class="card-body">
                <div class="row mb-3">
                   <h4 class="col-12">Basic Website Settings</h4>
                </div>
@@ -31,15 +30,24 @@
                <div class="row">
                   <div class="col-12 col-md-6">
                      <div class="mb-3">
-                        <label class="form-label" for="website_name_english">Website Name (English)</label>
-                        <input class="form-control btn-pill {% if errors.website_name_english %}is-invalid{% endif %}" id="website_name_english" name="website_name_english" type="text" value="{{ system_settings.website_name_english }}" placeholder="Website Name (English)"> {% if errors.website_name_english %} <div class="invalid-feedback">{{ errors.website_name_english }}</div> {% endif %}
+                        <label class="form-label" for="website_name_english">Website Name (English) *</label>
+                        <input class="form-control btn-pill {% if errors.website_name_english %}is-invalid{% endif %}" 
+                               id="website_name_english" name="website_name_english" type="text" 
+                               value="{{ system_settings.website_name_english|default:'' }}" 
+                               placeholder="Website Name (English)" required>
+                        {% if errors.website_name_english %} 
+                        <div class="invalid-feedback">{{ errors.website_name_english }}</div> 
+                        {% endif %}
                      </div>
                   </div>
                   <!-- Website Name (Arabic) -->
                   <div class="col-12 col-md-6">
                      <div class="mb-3">
                         <label class="form-label" for="website_name_arabic">Website Name (Arabic)</label>
-                        <input class="form-control btn-pill {% if errors.website_name_arabic %}is-invalid{% endif %}" id="website_name_arabic" name="website_name_arabic" type="text" value="{{ system_settings.website_name_arabic }}" placeholder="Website Name (Arabic)"> {% if errors.website_name_arabic %} <div class="invalid-feedback">{{ errors.website_name_arabic }}</div> {% endif %}
+                        <input class="form-control btn-pill" 
+                               id="website_name_arabic" name="website_name_arabic" type="text" 
+                               value="{{ system_settings.website_name_arabic|default:'' }}" 
+                               placeholder="Website Name (Arabic)">
                      </div>
                   </div>
                </div>
@@ -47,15 +55,27 @@
                <div class="row">
                   <div class="col-12 col-md-6">
                      <div class="mb-3">
-                        <label class="form-label" for="phone">Phone Number</label>
-                        <input class="form-control btn-pill {% if errors.phone %}is-invalid{% endif %}" id="phone" name="phone" type="text" value="{{ system_settings.phone }}" placeholder="Phone Number"> {% if errors.phone %} <div class="invalid-feedback">{{ errors.phone }}</div> {% endif %}
+                        <label class="form-label" for="phone">Phone Number *</label>
+                        <input class="form-control btn-pill {% if errors.phone %}is-invalid{% endif %}" 
+                               id="phone" name="phone" type="text" 
+                               value="{{ system_settings.phone|default:'' }}" 
+                               placeholder="Phone Number" required>
+                        {% if errors.phone %} 
+                        <div class="invalid-feedback">{{ errors.phone }}</div> 
+                        {% endif %}
                      </div>
                   </div>
                   <!-- Email Address -->
                   <div class="col-12 col-md-6">
                      <div class="mb-3">
                         <label class="form-label" for="email">Email Address</label>
-                        <input class="form-control btn-pill {% if errors.email %}is-invalid{% endif %}" id="email" name="email" type="email" value="{{ system_settings.email }}" placeholder="Email Address"> {% if errors.email %} <div class="invalid-feedback">{{ errors.email }}</div> {% endif %}
+                        <input class="form-control btn-pill {% if errors.email %}is-invalid{% endif %}" 
+                               id="email" name="email" type="email" 
+                               value="{{ system_settings.email|default:'' }}" 
+                               placeholder="Email Address">
+                        {% if errors.email %} 
+                        <div class="invalid-feedback">{{ errors.email }}</div> 
+                        {% endif %}
                      </div>
                   </div>
                </div>
@@ -64,7 +84,8 @@
                   <div class="col-12">
                      <div class="mb-3">
                         <label class="form-label" for="address">Address</label>
-                        <textarea class="form-control btn-pill" id="address" name="address" rows="3" placeholder="Address">{{ system_settings.address }}</textarea>
+                        <textarea class="form-control btn-pill" id="address" name="address" 
+                                  rows="3" placeholder="Address">{{ system_settings.address|default:'' }}</textarea>
                      </div>
                   </div>
                </div>
@@ -74,24 +95,29 @@
                <div style="border-top: 1px solid #ccc; margin-top: 5px; margin-bottom: 20px;"></div>
                <!-- Favicon -->
                <div class="row">
-                  <div class="col-12 col-md-4">
+                  <div class="col-12 col-md-6">
                      <div class="mb-3">
-                        <label class="form-label" for="fav_icon">Fav Icon (64x64 px)</label>
-                        <input class="form-control btn-pill" id="fav_icon" name="fav_icon" type="file"> {% if system_settings.fav_icon %} <img src="{{ MEDIA_URL }}{{ system_settings.fav_icon }}" alt="Fav Icon" style="width: 35px; height: 35px;"> {% endif %}
-                     </div>
-                  </div>
-                  <!-- Footer Logo -->
-                  <div class="col-12 col-md-4">
-                     <div class="mb-3">
-                        <label class="form-label" for="footer_logo">Admin Panel Logo (293x66 px)</label>
-                        <input class="form-control btn-pill" id="footer_logo" name="footer_logo" type="file"> {% if system_settings.footer_logo %} <img src="{{ MEDIA_URL }}{{ system_settings.footer_logo }}" alt="Footer Logo" style="width: 121px; height: 35px;"> {% endif %}
+                        <label class="form-label" for="fav_icon">Fav Icon</label>
+                        <input class="form-control btn-pill" id="fav_icon" name="fav_icon" type="file">
+                        {% if system_settings.fav_icon %} 
+                        <div class="mt-2">
+                            <img src="{{ MEDIA_URL }}{{ system_settings.fav_icon }}" alt="Fav Icon" style="max-width: 100px; max-height: 100px;">
+                            <p class="text-muted mt-1">Current: {{ system_settings.fav_icon }}</p>
+                        </div>
+                        {% endif %}
                      </div>
                   </div>
                   <!-- Header Logo -->
-                  <div class="col-12 col-md-4">
+                  <div class="col-12 col-md-6">
                      <div class="mb-3">
-                        <label class="form-label" for="header_logo">Website Logo (249x56 px)</label>
-                        <input class="form-control btn-pill" id="header_logo" name="header_logo" type="file"> {% if system_settings.header_logo %} <img src="{{ MEDIA_URL }}{{ system_settings.header_logo }}" alt="Header Logo" style="width: 121px; height: 35px;"> {% endif %}
+                        <label class="form-label" for="header_logo">Website Logo</label>
+                        <input class="form-control btn-pill" id="header_logo" name="header_logo" type="file">
+                        {% if system_settings.header_logo %} 
+                        <div class="mt-2">
+                            <img src="{{ MEDIA_URL }}{{ system_settings.header_logo }}" alt="Header Logo" style="max-width: 200px; max-height: 100px;">
+                            <p class="text-muted mt-1">Current: {{ system_settings.header_logo }}</p>
+                        </div>
+                        {% endif %}
                      </div>
                   </div>
                </div>
@@ -99,25 +125,15 @@
                   <h4>Other Settings</h4>
                </div>
                <div style="border-top: 1px solid #ccc; margin-top: 5px; margin-bottom: 20px;"></div>
-               <!-- Social Media Links -->
+               <!-- Currency Symbol -->
                <div class="row">
-                  <div class="col-12 col-md-4">
+                  <div class="col-12 col-md-6">
                      <div class="mb-3">
                         <label class="form-label" for="currency_symbol">Currency Symbol</label>
-                        <input class="form-control btn-pill" id="currency_symbol" name="currency_symbol" type="text" value="{{ system_settings.currency_symbol }}" placeholder="Currency symbol">
+                        <input class="form-control btn-pill" id="currency_symbol" name="currency_symbol" 
+                               type="text" value="{{ system_settings.currency_symbol|default:'' }}" 
+                               placeholder="Currency symbol (e.g., $, €, ₹)">
                      </div>
-                  </div>
-                  <div class="col-12 col-md-4">
-                     <div class="mb-3">
-                        <label class="form-label" for="past_year">Dropdown Past Year</label>
-                        <input class="form-control btn-pill" id="past_year" name="past_year" type="text" value="{{ system_settings.past_year }}" placeholder="Drop Down Past Year">
-                     </div>
-                     <script>
-                        document.getElementById("past_year").addEventListener("input", function(e) {
-                           // Remove any non-numeric characters
-                           this.value = this.value.replace(/[^0-9]/g, '');
-                        });
-                     </script>
                   </div>
                </div>
             </div>
@@ -132,168 +148,71 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    // Constants
-    const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg'];
-    const REQUIRED_FIELDS = [
-        '#website_name_english',
-        '#website_name_arabic',
-        '#phone', 
-        '#email',
-        '#address',
-        '#currency_symbol',
-        '#past_year'
-    ];
-    const OPTIONAL_FIELDS = [
-        'splash_screen', 'intro1_image', 'intro2_image', 'intro3_image',
-        'fav_icon', 'footer_logo', 'header_logo'
-    ];
-    
-    // Helper functions
-    const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    const isValidPhone = (phone) => /^[0-9\-\+\(\)\s]+$/.test(phone);
-    const isNumeric = (value) => !isNaN(value) && !isNaN(parseFloat(value));
-    
-    // Initialize form validation
-    const initFormValidation = () => {
-        // Form submission handler
-        $('form').on('submit', function(e) {
-            resetValidation();
-            const hasErrors = validateForm();
-            
-            if (hasErrors) {
-                e.preventDefault();
-                scrollToFirstError();
-                return false;
-            }
-            return true;
-        });
+    // Form validation
+    $('form').on('submit', function(e) {
+        let isValid = true;
         
-        // Real-time validation on blur
-        $('input, textarea').not(OPTIONAL_FIELDS.map(f => `#${f}`).join(',')).on('blur', function() {
-            validateField($(this));
-        });
-        
-        // Image validation
-        $('input[type="file"]').on('change', function() {
-            validateImageFile(this);
-        });
-    };
-    
-    // Reset validation state
-    const resetValidation = () => {
+        // Clear previous errors
         $('.is-invalid').removeClass('is-invalid');
         $('.invalid-feedback').remove();
-    };
-    
-    // Validate entire form
-    const validateForm = () => {
-        let hasErrors = false;
         
-        REQUIRED_FIELDS.forEach(field => {
-            const $field = $(field);
-            if (!$field.val().trim()) {
-                showError($field, 'This field is required.');
-                hasErrors = true;
+        // Validate required fields
+        const requiredFields = [
+            {id: '#website_name_english', message: 'Website Name (English) is required'},
+            {id: '#phone', message: 'Phone number is required'}
+        ];
+        
+        requiredFields.forEach(field => {
+            const value = $(field.id).val().trim();
+            if (!value) {
+                $(field.id).addClass('is-invalid');
+                $(field.id).after(`<div class="invalid-feedback">${field.message}</div>`);
+                isValid = false;
             }
         });
         
-        // Special validations
+        // Validate email format if provided
         const email = $('#email').val().trim();
-        if (email && !isValidEmail(email)) {
-            showError($('#email'), 'Please enter a valid email address.');
-            hasErrors = true;
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            $('#email').addClass('is-invalid');
+            $('#email').after('<div class="invalid-feedback">Please enter a valid email address</div>');
+            isValid = false;
         }
         
-        const phone = $('#phone').val().trim();
-        if (phone && !isValidPhone(phone)) {
-            showError($('#phone'), 'Please enter a valid phone number.');
-            hasErrors = true;
-        }
-        
-        const pastYear = $('#past_year').val().trim();
-        if (pastYear && !isNumeric(pastYear)) {
-            showError($('#past_year'), 'Please enter a valid year (numbers only).');
-            hasErrors = true;
-        }
-        
-        return hasErrors;
-    };
-    
-    // Validate individual field
-    const validateField = ($field) => {
-        const id = $field.attr('id');
-        const value = $field.val().trim();
-        
-        if (!value) {
-            showError($field, 'This field is required.');
-            return false;
-        }
-        
-        if (id === 'email' && !isValidEmail(value)) {
-            showError($field, 'Please enter a valid email address.');
-            return false;
-        }
-        
-        if (id === 'phone' && !isValidPhone(value)) {
-            showError($field, 'Please enter a valid phone number.');
-            return false;
-        }
-        
-        if (id === 'past_year' && !isNumeric(value)) {
-            showError($field, 'Please enter a valid year (numbers only).');
-            return false;
-        }
-        
-        clearError($field);
-        return true;
-    };
-    
-    // Show error for a field
-    const showError = ($field, message) => {
-        $field.addClass('is-invalid');
-        if (!$field.next('.invalid-feedback').length) {
-            $field.after(`<div class="invalid-feedback">${message}</div>`);
-        } else {
-            $field.next('.invalid-feedback').text(message);
-        }
-    };
-    
-    // Clear error for a field
-    const clearError = ($field) => {
-        $field.removeClass('is-invalid');
-        $field.next('.invalid-feedback').remove();
-    };
-    
-    // Scroll to first error
-    const scrollToFirstError = () => {
-        const $firstError = $('.is-invalid').first();
-        if ($firstError.length) {
+        if (!isValid) {
+            e.preventDefault();
+            // Scroll to first error
             $('html, body').animate({
-                scrollTop: $firstError.offset().top - 100
+                scrollTop: $('.is-invalid').first().offset().top - 100
             }, 500);
         }
-    };
-    
-    // Validate image file
-    const validateImageFile = (input) => {
-        const file = input.files[0];
-        if (!file) return;
-        
-        if (!IMAGE_TYPES.includes(file.type)) {
-            showError($(input), 'Please upload a valid image (JPEG, PNG, GIF, JPG).');
-            input.value = '';
-        } else {
-            clearError($(input));
-        }
-    };
-    
-    // Initialize numeric input for past_year
-    $('#past_year').on('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, '');
     });
     
-    // Initialize the form validation
-    initFormValidation();
+    // Real-time validation for required fields
+    $('#website_name_english, #phone').on('blur', function() {
+        const value = $(this).val().trim();
+        if (!value) {
+            $(this).addClass('is-invalid');
+            const fieldName = $(this).attr('id') === 'website_name_english' ? 
+                'Website Name (English)' : 'Phone number';
+            $(this).after(`<div class="invalid-feedback">${fieldName} is required</div>`);
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        }
+    });
+    
+    // Real-time email validation
+    $('#email').on('blur', function() {
+        const email = $(this).val().trim();
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            $(this).addClass('is-invalid');
+            $(this).after('<div class="invalid-feedback">Please enter a valid email address</div>');
+        } else {
+            $(this).removeClass('is-invalid');
+            $(this).next('.invalid-feedback').remove();
+        }
+    });
 });
 </script>
 {% endblock %}

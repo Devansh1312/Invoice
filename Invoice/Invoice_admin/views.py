@@ -1,10 +1,7 @@
 # Standard library imports
-import csv
 import os
 import random
-import json
 from datetime import timedelta
-from functools import wraps
 from django.utils.crypto import get_random_string
 
 # Django core imports
@@ -22,25 +19,26 @@ from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail, EmailMultiAlternatives
-from django.db.models import Avg, Count, Sum, Q
-from django.db.models.functions import TruncMonth
+from django.db.models import Count, Sum, Q
 from django.core.paginator import Paginator
-from django.db.models import Q
 from django.views import View
-
+from django.core.validators import validate_email
 # Django REST framework imports
-from rest_framework.views import APIView
 
 # Project specific imports
 from Invoice_admin.models import *
 from Invoice_admin.forms import *
 from Invoice_admin.decorators import permission_required
-from Invoice.firebase_config import send_push_notification
+
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from io import BytesIO
+from datetime import date
 
 # Send email to sub-admin with details
 def send_sub_admin_detail(email, name,username,password,subject):
     system_settings = SystemSettings.objects.first()
-    logo = system_settings.footer_logo if system_settings and system_settings.footer_logo else ''
+    logo = system_settings.header_logo if system_settings and system_settings.header_logo else ''
     context = {
         'name': name,
         'username': username,
@@ -279,70 +277,70 @@ def authenticate_username_email_or_phone(login_input, password):
         return user
     return None
 
+
 ################################ Dashboard View ##########################################
 @method_decorator(permission_required('view_dashboard'), name='dispatch')
 class Dashboard(LoginRequiredMixin, View):
 
-    def get_monthly_url_stats(self):
-        """Get URL stats for last 12 months by month"""
-        from django.db.models.functions import TruncMonth
-        
+    def get_monthly_invoice_stats(self):
+        """Get invoice stats for last 12 months by month"""
         twelve_months_ago = timezone.now() - timedelta(days=365)
         
         # Organize data for chart
         months = []
-        safe_counts = []
-        unsafe_counts = []
+        invoice_counts = []
+        revenue_data = []
         
         # Initialize data for last 12 months
         for i in range(12):
             date = timezone.now() - timedelta(days=30*(11-i))
             months.append(date.strftime("%b %Y"))
-            safe_counts.append(0)
-            unsafe_counts.append(0)
-        
+            invoice_counts.append(0)
+            revenue_data.append(0)
         
         return {
             'months': months,
-            'safe_counts': safe_counts,
-            'unsafe_counts': unsafe_counts
+            'invoice_counts': invoice_counts,
+            'revenue_data': revenue_data
         }
     
     def get(self, request, *args, **kwargs):
-        
         # Get user counts by role
         role_counts = Role.objects.annotate(
             user_count=Count('user', distinct=True)
         ).values('id', 'name_en', 'user_count')
-        
-        
-        # Total users count
+
+        # Total counts
         total_users = User.objects.count()
+        total_invoices = Invoice.objects.count()
+        total_revenue = Invoice.objects.aggregate(total=Sum('total_amount'))['total'] or 0
         
-        # Mobile app users count (assuming role ID 1 is for mobile users)
-        mobile_users = User.objects.filter(role=1).count()
+        # Monthly and annual stats
+        current_month = timezone.now().month
+        current_year = timezone.now().year
         
-        # Sub-admin count (assuming role ID 2 is for sub-admins)
-        sub_admin_users = User.objects.filter(role=2).count()
+        monthly_revenue = Invoice.objects.filter(
+            bill_date__month=current_month,
+            bill_date__year=current_year
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
         
+        annual_revenue = Invoice.objects.filter(
+            bill_date__year=current_year
+        ).aggregate(total=Sum('total_amount'))['total'] or 0
         
+        # Get monthly stats for charts
+        monthly_stats = self.get_monthly_invoice_stats()
         
-        
-        
-
-
-
-
-        
-            
-        
-        
-        
-        
-
         context = {
             'role_counts': role_counts,
             'total_users': total_users,
+            'total_invoices': total_invoices,
+            'total_revenue': total_revenue,
+            'monthly_revenue': monthly_revenue,
+            'annual_revenue': annual_revenue,
+            'months': monthly_stats['months'],
+            'invoice_counts': monthly_stats['invoice_counts'],
+            'revenue_data': monthly_stats['revenue_data'],
         }
         
         return render(request, "Admin/Dashboard.html", context)
@@ -365,10 +363,10 @@ class System_Settings(LoginRequiredMixin, View):
                 "breadcrumb": {
                     "parent": "Admin",
                     "child": "System Settings",
-                },  # Pass MEDIA_URL to the template
+                },
             },
         )
-# Handle POST request for updating system settings
+
     def post(self, request, *args, **kwargs):
         system_settings = SystemSettings.objects.first()
         if not system_settings:
@@ -382,10 +380,9 @@ class System_Settings(LoginRequiredMixin, View):
         success = False
 
         try:
-            # Handle file uploads: Fav Icon, Footer Logo, Header Logo, and Images
+            # Handle file uploads: Fav Icon and Header Logo
             file_fields = {
                 "fav_icon": "fav_icon",
-                "footer_logo": "footer_logo",
                 "header_logo": "header_logo",
             }
 
@@ -396,7 +393,7 @@ class System_Settings(LoginRequiredMixin, View):
 
                     # Remove old file if it exists
                     if current_file:
-                        old_file_path = os.path.join(settings.MEDIA_ROOT, current_file)
+                        old_file_path = os.path.join(settings.MEDIA_ROOT, str(current_file))
                         if os.path.isfile(old_file_path):
                             os.remove(old_file_path)
 
@@ -411,27 +408,35 @@ class System_Settings(LoginRequiredMixin, View):
                     # Update the system_settings with the new file path
                     setattr(system_settings, field_label, image_path)
 
-            # Save changes to the system_settings model
-            system_settings.save()
-
-            # Handle other settings fields from request.POST
-            settings_fields = {
-                "website_name_english": "This field is required.",
-                "website_name_arabic": "This field is required.",
-                "phone": "This field is required.",
-                "email": "This field is required.",
-                "address": "This field is required.",
-                "currency_symbol": "This field is required.",
+            # Handle required fields
+            required_fields = {
+                "website_name_english": "Website Name (English) is required",
+                "phone": "Phone number is required",
             }
 
-            for field, error_message in settings_fields.items():
-                field_value = request.POST.get(field)
-
-                if not field_value and error_message:
+            for field, error_message in required_fields.items():
+                field_value = request.POST.get(field, '').strip()
+                if not field_value:
                     errors[field] = error_message
                 else:
                     setattr(system_settings, field, field_value)
 
+            # Handle optional fields
+            optional_fields = [
+                "website_name_arabic",
+                "email",
+                "address",
+                "currency_symbol",
+            ]
+
+            for field in optional_fields:
+                field_value = request.POST.get(field, '').strip()
+                setattr(system_settings, field, field_value if field_value else None)
+
+            # Validate email format if provided
+            email = request.POST.get('email', '').strip()
+            if not email:
+                errors['email'] = "Please enter a valid email address"
 
             # Check if there are any errors
             if errors:
@@ -442,20 +447,9 @@ class System_Settings(LoginRequiredMixin, View):
                 messages.success(request, "System settings updated successfully.")
 
         except Exception as e:
-            messages.error(request, "An error occurred: {}".format(e))
+            messages.error(request, f"An error occurred: {str(e)}")
 
-
-        # Handle the response based on errors or success
         if errors:
-            # Create a more descriptive error message listing all missing fields
-            error_fields = list(errors.keys())
-            if len(error_fields) == 1:
-                error_msg = f"Please provide a value for the {error_fields[0]} field."
-            else:
-                error_msg = "Please provide values for the following fields: " + ", ".join(error_fields) + "."
-            
-            messages.error(request, error_msg)
-            
             return render(
                 request,
                 "Admin/System_Settings.html",
@@ -466,13 +460,7 @@ class System_Settings(LoginRequiredMixin, View):
                     "errors": errors,
                 },
             )
-        elif success:
-            messages.success(request, "System settings updated successfully.")
-            return redirect("System_Settings")
-        else:
-            messages.error(request, "An unexpected error occurred. Please try again.")
-            return redirect("System_Settings")
-        
+        return redirect("System_Settings")
 ##################################################### User Change Password View ###############################################################
 def change_password_ajax(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -1060,7 +1048,7 @@ def get_language(request):
 def send_forgot_password_otp(email, otp, language, system_settings, subject, request):
     
     try:
-        logo = system_settings.footer_logo if system_settings and system_settings.footer_logo else ''
+        logo = system_settings.header_logo if system_settings and system_settings.header_logo else ''
         
         # Prepare context for email template
         context = {
@@ -1321,3 +1309,218 @@ class ResetPasswordAdminView(View):
         except Exception as e:
             messages.error(request, _("An error occurred. Please try again."))
             return render(request, self.template_name)
+
+
+class InvoiceListView(View):
+    def get(self, request):
+        invoices = Invoice.objects.all().order_by('-bill_date')
+        customers = User.objects.filter(role_id=2)  # Assuming role_id 2 is for customers
+        return render(request, 'Admin/Invoice/invoice_list.html', {
+            'invoices': invoices,
+            'customers': customers,
+            'today': date.today().strftime('%Y-%m-%d'),
+            'templates': Invoice.BILL_TEMPLATE_CHOICES
+        })
+
+
+class InvoiceCreateView(View):
+    def post(self, request):
+        try:
+            # Get form data with proper validation
+            user_id = request.POST.get('user')
+            bill_template = request.POST.get('bill_template')
+            bill_date = request.POST.get('bill_date')
+            
+            # Convert to Decimal to avoid type mixing
+            jug_count = int(request.POST.get('jug_count', 0))
+            jug_amount = Decimal(request.POST.get('jug_amount', '25.0'))
+            bottle_count = int(request.POST.get('bottle_count', 0))
+            bottle_amount = Decimal(request.POST.get('bottle_amount', '25.0'))
+            other = request.POST.get('other', '')
+            other_amount = Decimal(request.POST.get('other_amount', '0.0'))
+            
+            # Validate required fields
+            if not user_id:
+                messages.error(request, 'Customer is required.')
+                return redirect('invoice_list')
+            
+            if not bill_template:
+                messages.error(request, 'Bill template is required.')
+                return redirect('invoice_list')
+            
+            if not bill_date:
+                messages.error(request, 'Bill date is required.')
+                return redirect('invoice_list')
+            
+            # Check if at least one item exists
+            if jug_count == 0 and bottle_count == 0 and other_amount == 0:
+                messages.error(request, 'Please add at least one item to the invoice.')
+                return redirect('invoice_list')
+            
+            # Validate user exists
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                messages.error(request, 'Selected customer does not exist.')
+                return redirect('invoice_list')
+            
+            # Calculate amounts using Decimal
+            jug_total = Decimal(str(jug_count)) * jug_amount
+            bottle_total = Decimal(str(bottle_count)) * bottle_amount
+            total_amount = jug_total + bottle_total + other_amount
+            
+            # Create invoice
+            invoice = Invoice.objects.create(
+                user=user,
+                bill_template=bill_template,
+                bill_date=bill_date,
+                jug=jug_count,  # Keep for backward compatibility
+                jug_count=jug_count,
+                jug_amount=jug_amount,
+                bottle=bottle_count,  # Keep for backward compatibility
+                bottle_count=bottle_count,
+                bottle_amount=bottle_amount,
+                other=other,
+                other_amount=other_amount,
+                total_amount=total_amount,
+                bill_amount=total_amount  # Set bill_amount as well
+            )
+            
+            messages.success(request, f'Invoice {invoice.bill_number} created successfully!')
+            return redirect('invoice_list')
+            
+        except (ValueError, TypeError) as e:
+            messages.error(request, f'Invalid input data: {str(e)}')
+            return redirect('invoice_list')
+        except Exception as e:
+            messages.error(request, f'Error creating invoice: {str(e)}')
+            return redirect('invoice_list')
+
+
+class InvoiceEditView(View):
+    def post(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        try:
+            # Get form data with proper validation
+            user_id = request.POST.get('user')
+            bill_template = request.POST.get('bill_template')
+            bill_date = request.POST.get('bill_date')
+            
+            # Convert to Decimal to avoid type mixing
+            jug_count = int(request.POST.get('jug_count', 0))
+            jug_amount = Decimal(request.POST.get('jug_amount', '25.0'))
+            bottle_count = int(request.POST.get('bottle_count', 0))
+            bottle_amount = Decimal(request.POST.get('bottle_amount', '25.0'))
+            other = request.POST.get('other', '')
+            other_amount = Decimal(request.POST.get('other_amount', '0.0'))
+            
+            # Validate required fields
+            if not user_id:
+                messages.error(request, 'Customer is required.')
+                return redirect('invoice_list')
+            
+            if not bill_template:
+                messages.error(request, 'Bill template is required.')
+                return redirect('invoice_list')
+            
+            if not bill_date:
+                messages.error(request, 'Bill date is required.')
+                return redirect('invoice_list')
+            
+            # Check if at least one item exists
+            if jug_count == 0 and bottle_count == 0 and other_amount == 0:
+                messages.error(request, 'Please add at least one item to the invoice.')
+                return redirect('invoice_list')
+            
+            # Validate user exists
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                messages.error(request, 'Selected customer does not exist.')
+                return redirect('invoice_list')
+            
+            # Calculate amounts using Decimal
+            jug_total = Decimal(str(jug_count)) * jug_amount
+            bottle_total = Decimal(str(bottle_count)) * bottle_amount
+            total_amount = jug_total + bottle_total + other_amount
+            
+            # Update invoice
+            invoice.user = user
+            invoice.bill_template = bill_template
+            invoice.bill_date = bill_date
+            invoice.jug = jug_count
+            invoice.jug_count = jug_count
+            invoice.jug_amount = jug_amount
+            invoice.bottle = bottle_count
+            invoice.bottle_count = bottle_count
+            invoice.bottle_amount = bottle_amount
+            invoice.other = other
+            invoice.other_amount = other_amount
+            invoice.total_amount = total_amount
+            invoice.bill_amount = total_amount  # Update bill_amount as well
+            
+            invoice.save()
+            
+            messages.success(request, f'Invoice {invoice.bill_number} updated successfully!')
+            return redirect('invoice_list')
+            
+        except (ValueError, TypeError) as e:
+            messages.error(request, f'Invalid input data: {str(e)}')
+            return redirect('invoice_list')
+        except Exception as e:
+            messages.error(request, f'Error updating invoice: {str(e)}')
+            return redirect('invoice_list')
+
+
+class InvoicePdfView(View):
+    def get(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        
+        try:
+            # Get template based on bill_template
+            template_name = 'Admin/Invoice/invoice_template_1.html'
+            
+            # You can add logic to select different templates based on bill_template
+            if invoice.bill_template == '2':
+                template_name = 'Admin/Invoice/invoice_template_2.html'
+            elif invoice.bill_template == '3':
+                template_name = 'Admin/Invoice/invoice_template_3.html'
+            
+            template = get_template(template_name)
+            context = {'invoice': invoice}
+            html = template.render(context)
+            
+            result = BytesIO()
+            pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+            
+            if not pdf.err:
+                response = HttpResponse(result.getvalue(), content_type='application/pdf')
+                filename = f"Invoice_{invoice.bill_number}.pdf"
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+            else:
+                messages.error(request, 'Error generating PDF.')
+                return redirect('invoice_list')
+                
+        except Exception as e:
+            messages.error(request, f'Error generating PDF: {str(e)}')
+            return redirect('invoice_list')
+
+
+class InvoiceDeleteView(View):
+    def post(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        try:
+            bill_number = invoice.bill_number
+            invoice.delete()
+            messages.success(request, f'Invoice {bill_number} deleted successfully!')
+        except Exception as e:
+            messages.error(request, f'Error deleting invoice: {str(e)}')
+        return redirect('invoice_list')
+
+def print_invoice(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    return render(request, 'Admin/Invoice/invoice_print.html', {
+        'invoice': invoice,
+        'print_mode': True  # Add this to indicate we're in print mode
+    })

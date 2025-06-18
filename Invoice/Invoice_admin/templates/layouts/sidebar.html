@@ -6,8 +6,8 @@
     <div>
         <div class="logo-wrapper">
             <a href="{% url 'view_dashboard' %}">
-                <img style="width: 120px; height: 35px;" class="img-fluid for-light" src="{{ footer_logo }}" alt="">
-                <img style="width: 120px; height: 35px;" class="img-fluid for-dark" src="{{ footer_logo }}" alt="">
+                <img style="width: 120px; height: 35px;" class="img-fluid for-light" src="{{ header_logo }}" alt="">
+                <img style="width: 120px; height: 35px;" class="img-fluid for-dark" src="{{ header_logo }}" alt="">
             </a>
             <div class="back-btn">
                 <i class="fa fa-angle-left"></i>
@@ -46,27 +46,37 @@
                             <span class="lan">Dashboard</span>
                         </a>
                     </li>
-                    
-                    <!-- User Management -->
-                    <li class="sidebar-list">
-                        <a class="sidebar-link sidebar-title" href="#">
+                    <li class="sidebar">
+                        <a class="sidebar-link sidebar-title link-nav" href="{% url 'customer_list' %}">
                             <svg class="stroke-icon">
                                 <use href="{% static 'assets/svg/icon-sprite.svg'%}#user-visitor"></use>
                             </svg>
                             <svg class="fill-icon">
                                 <use href="{% static 'assets/svg/icon-sprite.svg'%}#user-visitor"></use>
                             </svg>
-                            <span class="lan">User Management</span>
+                            <span class="lan">Customer Management</span>
                         </a>
-                        <ul class="sidebar-submenu">
-                            <li>
-                                <a href="{% url 'customer_list' %}">Customer Create</a>
-                            </li>
-                        </ul>
                     </li>
-                    
-                    <!-- System Settings -->
+                    <!-- Invoice Management -->
                     <li class="sidebar">
+                        <a class="sidebar-link sidebar-title link-nav" href="{% url 'invoice_list' %}">
+                            <svg class="stroke-icon">
+                                <use href="{% static 'assets/svg/icon-sprite.svg'%}#stroke-files"></use>
+                            </svg>
+                            <svg class="fill-icon">
+                                <use href="{% static 'assets/svg/icon-sprite.svg'%}#fill-files"></use>
+                            </svg>
+                            <span class="lan">Invoice Management</span>
+                        </a>    
+                    </li>
+                    <li class="sidebar">
+                        <a class="sidebar-link sidebar-title link-nav" href="#" data-bs-toggle="modal" data-bs-target="#logoutModal">
+                            <i data-feather="log-in"></i>
+                            <span class="lan">Logout</span>
+                        </a>
+                    </li>
+                    <!-- System Settings -->
+                    <!-- <li class="sidebar">
                         <a class="sidebar-link sidebar-title link-nav" href="{% url 'System_Settings' %}">
                             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -78,10 +88,10 @@
                             </svg>
                             <span class="lan">System Settings</span>
                         </a>
-                    </li>
+                    </li> -->
                     
                     <!-- Permissions Settings -->
-                    <li class="sidebar-list">
+                    <!-- <li class="sidebar-list">
                         <a class="sidebar-link sidebar-title" href="#">
                             <svg class="stroke-icon">
                                 <use href="{% static 'assets/svg/icon-sprite.svg'%}#stroke-authenticate"></use>
@@ -102,10 +112,10 @@
                                 <a href="{% url 'permission_list' %}">Permissions</a>
                             </li>
                         </ul>
-                    </li>
+                    </li> -->
                     
                     <!-- Profile -->
-                    <li class="sidebar">
+                    <!-- <li class="sidebar">
                         <a class="sidebar-link sidebar-title link-nav" href="{% url 'user_profile' %}">
                             <svg class="stroke-icon">
                                 <use href="{% static 'assets/svg/icon-sprite.svg'%}#stroke-user"></use>
@@ -115,7 +125,7 @@
                             </svg>
                             <span class="lan">Profile</span>
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
             <div class="right-arrow" id="right-arrow">

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="UTF-8" />
+<title>Business Bill Preview</title>
+<style>
+  body {
+    font-family: 'Arial Unicode MS', Arial, sans-serif;
+    margin: 40px;
+    color: #b22222; /* Firebrick red matching bill red */
+  }
+  .bill-container {
+    border: 2px solid #b22222;
+    padding: 12px;
+    max-width: 650px;
+  }
+  .header-contact {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    font-size: 12px;
+  }
+  .business-name {
+    color: #b22222;
+    font-size: 35px;
+    font-weight: bolder;
+    text-align: center;
+    margin: 6px 0 4px 0;
+    font-family: 'Shruti', Gujarati, sans-serif;
+  }
+  .subheader {
+    font-size: 14px;
+    font-family: 'Shruti', Gujarati, sans-serif;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .address-box {
+    border: 1.5px solid #b22222;
+    border-radius: 14px;
+    padding: 4px 8px;
+    font-weight: bold;
+    font-family: 'Shruti', Gujarati, sans-serif;
+    width: max-content;
+    margin: 0 auto 12px auto;
+    color: #b22222;
+  }
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+  }
+  .info-table td {
+    font-weight: bold;
+    font-family: 'Shruti', Gujarati, sans-serif;
+    font-size: 13px;
+    color: #b22222;
+  }
+  .info-left {
+    border: 1.5px solid #b22222;
+    padding: 6px 8px;
+    width: 60%;
+    vertical-align: top;
+  }
+  .info-right {
+    border: 1.5px solid #b22222;
+    padding: 6px 8px;
+    width: 40%;
+  }
+  .input-line {
+    border-bottom: 1.5px solid #b22222;
+    margin-top: 10px;
+    width: 90%;
+  }
+
+  /* Main data table */
+  .main-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Shruti', Gujarati, sans-serif;
+    font-weight: bold;
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .main-table th, .main-table td {
+    border: 1.4px solid #b22222;
+    padding: 6px 8px;
+    text-align: center;
+  }
+  .main-table th {
+    background: #fff;
+  }
+  .main-table td {
+    height: 80px; /* height for entries */
+  }
+
+  /* Bottom text area */
+  .bottom-note {
+    border: 1.5px solid #b22222;
+    font-family: 'Shruti', Gujarati, sans-serif;
+    font-size: 13px;
+    padding: 6px 12px;
+    margin-top: 10px;
+  }
+  .bottom-note .left-text {
+    float: left;
+  }
+  .bottom-note .right-text {
+    float: right;
+    font-weight: bold;
+  }
+  .clearfix::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+</style>
+</head>
+<body>
+  <div class="bill-container" role="document" aria-label="Business bill in Gujarati with red borders">
+    <div class="header-contact" aria-label="Contact numbers">
+      <div>M. 97250 34850</div>
+      <div>M. 85114 35510 <br> M. 88490 29071</div>
+    </div>
+    <div class="business-name">{{ invoice.get_bill_template_display }}</div>
+    <div class="subheader">RO પદ્ધતિથી શુદ્ધ અને ઠંડા પાણીના જાર ના સપ્લાયર્સ</div>
+    <div class="address-box">19/50, માનસરોવર કોમ્પ્લેક્સ, ગુરુદ્વારા ની સામે, છાણી, વડોદરા.</div>
+
+    <table class="info-table" role="form" aria-label="Customer information">
+      <tr>
+        <td class="info-left" style="font-size: 15px; font-weight: bold;">
+          નામ: <div class="input-line" aria-label="Input line for Name">{{ invoice.user.name }}</div>
+        </td>
+        <td class="info-right" style="font-size: 15px; font-weight: bold;">
+          નંબર: {{ invoice.bill_number }}<div class="input-line" aria-label="Input line for Number"></div><br />
+          તારીખ: {{ invoice.bill_date|date:"d/m/Y" }}<div class="input-line" aria-label="Input line for Date"></div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="main-table" aria-label="Bill details table">
+      <thead>
+      <tr>
+        <th scope="col" style="width:11%;">નં.</th>
+        <th scope="col" style="width:46%;">વિગત</th>
+        <th scope="col" style="width:14%;">નંગ</th>
+        <th scope="col" style="width:14%;">ભાવ</th>
+        <th scope="col" style="width:15%;">રકમ</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% if invoice.jug_count > 0 %}
+      <tr>
+        <td>1</td>
+        <td style="font-size: 15px; font-weight: bold;">Drinking Water Jug Supply</td>
+        <td>{{ invoice.jug_count }}</td>
+        <td>{{ invoice.jug_amount }}</td>
+        <td>{{ invoice.jug_total|floatformat:2 }} ₹</td>
+      </tr>
+      {% endif %}
+      
+      {% if invoice.bottle_count > 0 %}
+      <tr>
+        <td>2</td>
+        <td style="font-size: 15px; font-weight: bold;">Drinking Water Bottle Supply</td>
+        <td>{{ invoice.bottle_count }}</td>
+        <td>{{ invoice.bottle_amount }}</td>
+        <td>{{ invoice.bottle_total|floatformat:2 }} ₹</td>
+      </tr>
+      {% endif %}
+      
+      {% if invoice.other and invoice.other_amount > 0 %}
+      <tr>
+        <td>3</td>
+        <td style="font-size: 15px; font-weight: bold;">{{ invoice.other }}</td>
+        <td>-</td>
+        <td>-</td>
+        <td>{{ invoice.other_amount|floatformat:2 }} ₹</td>
+      </tr>
+      {% endif %}
+      </tbody>
+      <tfoot>
+      <tr>
+        <td style="text-align:left; padding-left: 8px; font-size: 20px; font-weight: bold;">શબ્દોમાં રૂ. :- </td>
+        <td colspan="2">{{ invoice.total_amount_in_words }}</td>
+        <td>ટોટલ</td>
+        <td>{{ invoice.total_amount|floatformat:2 }} ₹</td>
+      </tr>
+      </tfoot>
+    </table>
+
+    <div class="bottom-note clearfix" aria-label="Notes and footer">
+      <div class="left-text" style="font-weight: bold; font-size: 15px;">
+        વડોદરા ન્યાયક્ષેત્રને આધીન,<br />ભૂલચુક લેવી દેવી.
+      </div>
+      <div class="right-text" style="margin-bottom: 0px !important; font-weight: bold; font-size: 15px;">ફોર, {{ invoice.get_bill_template_display }}</div>
+    </div>
+    <div class="bottom-note clearfix" aria-label="Footer note">
+      <div class="left-text" style="font-weight: bold; font-size: 15px;">
+        Note : This bill is computer generated and does not require a signature.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

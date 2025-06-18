@@ -60,6 +60,13 @@ urlpatterns = [
     path('customers/<int:pk>/edit/', CustomerEditView.as_view(), name='customer_edit'),
     path('customers/<int:pk>/toggle-status/', CustomerToggleStatusView.as_view(), name='customer_toggle_status'),
     path('customers/<int:pk>/delete/', CustomerDeleteView.as_view(), name='customer_delete'),
+
+    path('invoices/', InvoiceListView.as_view(), name='invoice_list'),
+    path('invoices/create/', InvoiceCreateView.as_view(), name='invoice_create'),
+    path('invoices/<int:pk>/edit/', InvoiceEditView.as_view(), name='invoice_edit'),
+    path('invoices/<int:pk>/pdf/', InvoicePdfView.as_view(), name='invoice_pdf'),
+    path('invoices/<int:pk>/print/', print_invoice, name='invoice_print'),
+    path('invoices/<int:pk>/delete/', InvoiceDeleteView.as_view(), name='invoice_delete'),
 ]
 
 
