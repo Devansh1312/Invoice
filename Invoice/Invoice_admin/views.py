@@ -288,7 +288,7 @@ class Dashboard(LoginRequiredMixin, View):
         ).values('id', 'name_en', 'user_count')
 
         # Total counts
-        total_users = User.objects.count()
+        total_users = User.objects.filter(is_active=True,role=2).count()
         total_invoices = Invoice.objects.count()
         total_revenue = Invoice.objects.aggregate(total=Sum('total_amount'))['total'] or 0
         
