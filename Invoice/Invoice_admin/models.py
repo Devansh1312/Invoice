@@ -169,7 +169,8 @@ class Invoice(models.Model):
     bill_number = models.CharField(max_length=100, unique=True, blank=True)
     bill_date = models.DateField()
     bill_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
-    
+    note = models.TextField(null=True, blank=True, verbose_name="Additional Notes")
+
     # Jug fields
     jug = models.IntegerField(default=0)  # For backward compatibility
     jug_count = models.IntegerField(default=0)

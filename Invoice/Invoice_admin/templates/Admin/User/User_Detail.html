@@ -1,5 +1,4 @@
 {% extends 'base.html' %} 
-{% load custom_filters %} 
 {% load static %} 
 {% load sass_tags %} 
 
@@ -220,7 +219,11 @@
                         <div class="d-flex flex-wrap gap-2">
                             <!-- Back Button -->
                             {% if user.role.id == 2 %}
-                                {% url 'customer_list' as back_url %}
+                                {% if user.is_active %}
+                                    {% url 'customer_list' as back_url %}
+                                {% else %}
+                                    {% url 'inactive_customers' as back_url %}
+                                {% endif %}
                             {% else %}
                                 {% url 'Dashboard' as back_url %}
                             {% endif %}
@@ -445,6 +448,9 @@
                                                                            data-bottle-count="{{ invoice.bottle_count }}"
                                                                            data-bottle-amount="{{ invoice.bottle_amount }}"
                                                                            data-total-amount="{{ invoice.total_amount }}"
+                                                                           data-other="{{ invoice.other|default:'' }}"
+                                                                           data-other-amount="{{ invoice.other_amount }}"
+                                                                           data-note="{{ invoice.note|default:'' }}"
                                                                            data-created-at="{{ invoice.bill_created_at|date:'Y-m-d H:i' }}">
                                                                            View Details
                                                                         </a>
@@ -482,19 +488,22 @@
             </div>
             <div class="modal-body">
                 <div class="invoice-detail-card mb-4">
-                    <h6 class="invoice-detail-title">Invoice Information</h6>
+                    <h6 class="invoice-detail-title">Basic Information</h6>
                     <div class="row g-3">
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
                             <p><strong>Bill Number:</strong> <span id="view-bill-number">Loading...</span></p>
                         </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
                             <p><strong>Template:</strong> <span id="view-bill-template">Loading...</span></p>
                         </div>
-                        <div class="col-12 col-md-6">
+                        <div class="col-12 col-md-4">
+                            <p><strong>Customer:</strong> <span id="view-user">Loading...</span></p>
+                        </div>
+                        <div class="col-12 col-md-4">
                             <p><strong>Bill Date:</strong> <span id="view-bill-date">Loading...</span></p>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <p><strong>Created At:</strong> <span id="view-created-at">Loading...</span></p>
+                        <div class="col-12 col-md-4">
+                            <p><strong>Created At:</strong> <span id="view-bill-created-at">Loading...</span></p>
                         </div>
                     </div>
                 </div>
@@ -503,17 +512,45 @@
                     <div class="col-12 col-md-6">
                         <div class="invoice-detail-card">
                             <h6 class="invoice-detail-title">Jug Details</h6>
-                            <p><strong>Jug Price:</strong> ₹<span id="view-jug-price">0</span></p>
-                            <p><strong>Jug Count:</strong> <span id="view-jug-count">0</span></p>
-                            <p><strong>Jug Amount:</strong> ₹<span id="view-jug-amount">0.00</span></p>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <p><strong>Jug Count:</strong> <span id="view-jug-count">0</span></p>
+                                </div>
+                                <div class="col-6">
+                                    <p><strong>Jug Price:</strong> ₹<span id="view-jug-price">25.00</span></p>
+                                </div>
+                                <div class="col-12">
+                                    <p><strong>Jug Total:</strong> ₹<span id="view-jug-total">0.00</span></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="invoice-detail-card">
                             <h6 class="invoice-detail-title">Bottle Details</h6>
-                            <p><strong>Bottle Price:</strong> ₹<span id="view-bottle-price">0</span></p>
-                            <p><strong>Bottle Count:</strong> <span id="view-bottle-count">0</span></p>
-                            <p><strong>Bottle Amount:</strong> ₹<span id="view-bottle-amount">0.00</span></p>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <p><strong>Bottle Count:</strong> <span id="view-bottle-count">0</span></p>
+                                </div>
+                                <div class="col-6">
+                                    <p><strong>Bottle Price:</strong> ₹<span id="view-bottle-price">25.00</span></p>
+                                </div>
+                                <div class="col-12">
+                                    <p><strong>Bottle Total:</strong> ₹<span id="view-bottle-total">0.00</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="invoice-detail-card mt-4">
+                    <h6 class="invoice-detail-title">Other Charges</h6>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <p><strong>Description:</strong> <span id="view-other">N/A</span></p>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <p><strong>Amount:</strong> ₹<span id="view-other-amount">0.00</span></p>
                         </div>
                     </div>
                 </div>
@@ -522,23 +559,36 @@
                     <h6 class="invoice-detail-title">Amount Summary</h6>
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
-                            <p><strong>Bill Amount:</strong> <span class="amount-display">₹<span id="view-bill-amount">0.00</span></span></p>
+                            <p><strong>Jug Total:</strong> ₹<span id="view-jug-total-summary">0.00</span></p>
                         </div>
                         <div class="col-12 col-md-4">
-                            <p><strong>Jug Total:</strong> <span class="amount-display">₹<span id="view-jug-total">0.00</span></span></p>
+                            <p><strong>Bottle Total:</strong> ₹<span id="view-bottle-total-summary">0.00</span></p>
                         </div>
                         <div class="col-12 col-md-4">
-                            <p><strong>Bottle Total:</strong> <span class="amount-display">₹<span id="view-bottle-total">0.00</span></span></p>
+                            <p><strong>Other Charges:</strong> ₹<span id="view-other-amount-summary">0.00</span></p>
                         </div>
                     </div>
                     <hr>
                     <div class="text-center">
-                        <h4><strong>Total Amount: <span class="amount-display">₹<span id="view-total-amount">0.00</span></span></strong></h4>
+                        <h4><strong>Total Amount: ₹<span id="view-total-amount">0.00</span></strong></h4>
+                        <p class="text-muted"><em>In words: <span id="view-total-amount-words">Zero Only</span></em></p>
+                    </div>
+                </div>
+
+                <div class="invoice-detail-card mt-4">
+                    <h6 class="invoice-detail-title">Additional Information</h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <p><strong>Notes:</strong> <span id="view-note">No additional notes</span></p>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="#" class="btn btn-success btn-sm" id="print-invoice-btn">Print Invoice</a>
+                </div>
             </div>
         </div>
     </div>
@@ -622,42 +672,85 @@
                 const billNumber = button.getAttribute('data-bill-number') || '';
                 const billTemplate = button.getAttribute('data-bill-template') || '';
                 const billDate = button.getAttribute('data-bill-date') || '';
-                const billAmount = parseFloat(button.getAttribute('data-bill-amount')) || 0;
-                const jug = parseFloat(button.getAttribute('data-jug')) || 0;
+                const jugPrice = parseFloat(button.getAttribute('data-jug')) || 0;
                 const jugCount = parseInt(button.getAttribute('data-jug-count')) || 0;
                 const jugAmount = parseFloat(button.getAttribute('data-jug-amount')) || 0;
-                const bottle = parseFloat(button.getAttribute('data-bottle')) || 0;
+                const bottlePrice = parseFloat(button.getAttribute('data-bottle')) || 0;
                 const bottleCount = parseInt(button.getAttribute('data-bottle-count')) || 0;
                 const bottleAmount = parseFloat(button.getAttribute('data-bottle-amount')) || 0;
                 const totalAmount = parseFloat(button.getAttribute('data-total-amount')) || 0;
+                const otherDesc = button.getAttribute('data-other') || 'N/A';
+                const otherAmount = parseFloat(button.getAttribute('data-other-amount')) || 0;
+                const note = button.getAttribute('data-note') || 'No additional notes';
                 const createdAt = button.getAttribute('data-created-at') || '';
-
+                const invoiceId = button.getAttribute('data-invoice-id');
+                
+                document.getElementById('print-invoice-btn').href = '/invoices/' + invoiceId + '/print/';
                 // Set basic invoice info
                 document.getElementById('view-bill-number').textContent = billNumber;
                 document.getElementById('view-bill-template').textContent = billTemplate;
                 document.getElementById('view-bill-date').textContent = billDate;
-                document.getElementById('view-created-at').textContent = createdAt;
+                document.getElementById('view-bill-created-at').textContent = createdAt;
+                document.getElementById('view-user').textContent = "{{ user.username }}";
                 
                 // Set jug details
-                document.getElementById('view-jug-price').textContent = jug.toFixed(2);
+                document.getElementById('view-jug-price').textContent = jugPrice.toFixed(2);
                 document.getElementById('view-jug-count').textContent = jugCount;
-                document.getElementById('view-jug-amount').textContent = jugAmount.toFixed(2);
+                document.getElementById('view-jug-total').textContent = jugAmount.toFixed(2);
+                document.getElementById('view-jug-total-summary').textContent = jugAmount.toFixed(2);
                 
                 // Set bottle details
-                document.getElementById('view-bottle-price').textContent = bottle.toFixed(2);
+                document.getElementById('view-bottle-price').textContent = bottlePrice.toFixed(2);
                 document.getElementById('view-bottle-count').textContent = bottleCount;
-                document.getElementById('view-bottle-amount').textContent = bottleAmount.toFixed(2);
-                
-                // Set amounts
-                document.getElementById('view-bill-amount').textContent = billAmount.toFixed(2);
-                document.getElementById('view-jug-total').textContent = jugAmount.toFixed(2);
                 document.getElementById('view-bottle-total').textContent = bottleAmount.toFixed(2);
+                document.getElementById('view-bottle-total-summary').textContent = bottleAmount.toFixed(2);
+                
+                // Set other charges
+                document.getElementById('view-other').textContent = otherDesc;
+                document.getElementById('view-other-amount').textContent = otherAmount.toFixed(2);
+                document.getElementById('view-other-amount-summary').textContent = otherAmount.toFixed(2);
+                
+                // Set total amount
                 document.getElementById('view-total-amount').textContent = totalAmount.toFixed(2);
+                
+                // Set note
+                document.getElementById('view-note').textContent = note;
+                
+                // Convert amount to words
+                document.getElementById('view-total-amount-words').textContent = numberToWords(totalAmount) + " Only";
                 
                 // Show the modal
                 viewInvoiceModal.show();
             }
         });
+
+        // Helper function to convert numbers to words
+        function numberToWords(num) {
+            // You'll need to implement this function or use a library
+            // This is a simplified version - consider using a proper library
+            const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+            const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+            const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+            
+            function convertLessThanOneHundred(num) {
+                if (num < 10) return ones[num];
+                if (num >= 10 && num < 20) return teens[num - 10];
+                if (num >= 20) {
+                    return tens[Math.floor(num / 10)] + (num % 10 !== 0 ? ' ' + ones[num % 10] : '');
+                }
+            }
+            
+            if (num === 0) return 'Zero';
+            let result = '';
+            if (num >= 100) {
+                result += ones[Math.floor(num / 100)] + ' Hundred ';
+                num %= 100;
+            }
+            if (num > 0) {
+                result += convertLessThanOneHundred(num);
+            }
+            return result.trim() || 'Zero';
+        }
     });
 </script>
 {% endblock %}

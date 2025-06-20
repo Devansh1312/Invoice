@@ -75,6 +75,7 @@
                                                     data-other="{{ invoice.other|default:'' }}"
                                                     data-other-amount="{{ invoice.other_amount }}"
                                                     data-toggle="modal" 
+                                                    data-note="{{ invoice.note|default:'' }}"
                                                     data-target="#editInvoiceModal"
                                                     title="Edit">
                                                     <i class="fas fa-edit"></i>
@@ -215,7 +216,14 @@
                             </div>
                         </div>
                     </div>
-
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="note">Additional Notes</label>
+                                <textarea class="form-control" id="note" name="note" rows="3" placeholder="Any additional notes for this invoice"></textarea>
+                            </div>
+                        </div>
+                    </div>
                     <hr>
                     <div class="row">
                         <div class="col-md-8"></div>
@@ -344,7 +352,14 @@
                             </div>
                         </div>
                     </div>
-
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="edit_note">Additional Notes</label>
+                                <textarea class="form-control" id="edit_note" name="note" rows="3" placeholder="Any additional notes for this invoice"></textarea>
+                            </div>
+                        </div>
+                    </div>
                     <hr>
                     <div class="row">
                         <div class="col-md-8"></div>
@@ -478,7 +493,8 @@ $(document).ready(function() {
         var bottleAmount = $(this).data('bottle-amount');
         var other = $(this).data('other');
         var otherAmount = $(this).data('other-amount');
-        
+        var note = $(this).data('note');
+
         // Populate the form fields
         $('#edit_user').val(userId);
         $('#edit_bill_template').val(template);
@@ -489,6 +505,7 @@ $(document).ready(function() {
         $('#edit_bottle_amount').val(bottleAmount);
         $('#edit_other').val(other);
         $('#edit_other_amount').val(otherAmount);
+        $('#edit_note').val(note);
         
         // Calculate totals
         calculateTotals('edit_');

@@ -48,7 +48,8 @@ urlpatterns = [
     path('modules/delete/<int:pk>/', ModuleDeleteView.as_view(), name='module_delete'),
 
     # URLs
-    path('customers/', CustomerListView.as_view(), name='customer_list'),
+    path('customers/', ActiveCustomerListView.as_view(), name='customer_list'),
+    path('Inactive/customer/', InactiveCustomerListView.as_view(), name='inactive_customers'),
     path('customers/detail/<int:user_id>/', UserDetailView.as_view(), name='customer_detail'),
     path('customers/create/', CustomerCreateView.as_view(), name='customer_create'),
     path('customers/<int:pk>/edit/', CustomerEditView.as_view(), name='customer_edit'),

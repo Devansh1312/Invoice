@@ -46,16 +46,24 @@
                             <span class="lan">Dashboard</span>
                         </a>
                     </li>
-                    <li class="sidebar">
-                        <a class="sidebar-link sidebar-title link-nav" href="{% url 'customer_list' %}">
+                    <li class="sidebar-list">
+                        <a class="sidebar-link sidebar-title" href="#">
                             <svg class="stroke-icon">
                                 <use href="{% static 'assets/svg/icon-sprite.svg'%}#user-visitor"></use>
                             </svg>
                             <svg class="fill-icon">
                                 <use href="{% static 'assets/svg/icon-sprite.svg'%}#user-visitor"></use>
                             </svg>
-                            <span class="lan">Customer Management</span>
+                            <span class="lan">Customers</span>
                         </a>
+                        <ul class="sidebar-submenu">
+                            <li>
+                                <a href="{% url 'customer_list' %}">Customer</a>
+                            </li>
+                            <li>
+                                <a href="{% url 'inactive_customers' %}">Inactive Customers</a>
+                            </li>
+                        </ul>
                     </li>
                     <!-- Invoice Management -->
                     <li class="sidebar">
@@ -74,6 +82,7 @@
                             <i data-feather="log-in"></i>
                             <span class="lan">Logout</span>
                         </a>
+
                     </li>
                     <!-- System Settings -->
                     <!-- <li class="sidebar">

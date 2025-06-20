@@ -150,7 +150,7 @@
 			}
 
 			.main-table td {
-				height: 80px;
+				height: 30px;
 				/* height for entries */
 			}
 
@@ -208,28 +208,34 @@
 						<th scope="col" style="width:15%;">રકમ</th>
 					</tr>
 				</thead>
-				<tbody style="height: 500px; vertical-align: top;">   
+				<tbody style="vertical-align: top;">
 					<tr>
-						<td style="padding-top: 50px;">1</td>
-						<td style="font-size: 15px; font-weight: bold; padding-top: 50px;"> Water Jug </td>
-						<td style="padding-top: 50px;">{{ invoice.jug_count }}</td>
-						<td style="padding-top: 50px;">{{ invoice.jug_amount }}</td>
-						<td style="padding-top: 50px;">{{ invoice.jug_total|floatformat:2 }} ₹</td>
+						<td style="padding-top: 30px;">1</td>
+						<td style="font-size: 15px; font-weight: bold; padding-top: 30px;"> Water Jug </td>
+						<td style="padding-top: 15px;">{{ invoice.jug_count }}</td>
+						<td style="padding-top: 15px;">{{ invoice.jug_amount }}</td>
+						<td style="padding-top: 15px;">{{ invoice.jug_total|floatformat:2 }} ₹</td>
 					</tr> 
 					<tr>
-						<td style="padding-top: 50px;">2</td>
-						<td style="font-size: 15px; font-weight: bold; padding-top: 50px;"> Water Bottle </td>
-						<td style="padding-top: 50px;">{{ invoice.bottle_count }}</td>
-						<td style="padding-top: 50px;">{{ invoice.bottle_amount }}</td>
-						<td style="padding-top: 50px;">{{ invoice.bottle_total|floatformat:2 }} ₹</td>
+						<td style="padding-top: 30px;">2</td>
+						<td style="font-size: 15px; font-weight: bold; padding-top: 30px;"> Water Bottle </td>
+						<td style="padding-top: 30px;">{{ invoice.bottle_count }}</td>
+						<td style="padding-top: 30px;">{{ invoice.bottle_amount }}</td>
+						<td style="padding-top: 30px;">{{ invoice.bottle_total|floatformat:2 }} ₹</td>
 					</tr>
 					<tr>
-						<td style="padding-top: 50px;">3</td>
-						<td style="font-size: 15px; font-weight: bold; padding-top: 50px;">{{ invoice.other|default:"Other Charges" }}</td>
-						<td style="padding-top: 50px;">-</td>
-						<td style="padding-top: 50px;">-</td>
-						<td style="padding-top: 50px;">{{ invoice.other_amount|floatformat:2 }} ₹</td>
-					</tr> 
+						<td style="padding-top: 30px;">3</td>
+						<td style="font-size: 15px; font-weight: bold; padding-top: 30px;">{{ invoice.other|default:"Other Charges" }}</td>
+						<td style="padding-top: 30px;">-</td>
+						<td style="padding-top: 30px;">-</td>
+						<td style="padding-top: 30px;">{{ invoice.other_amount|floatformat:2 }} ₹</td>
+					</tr>
+					{% if invoice.note %} 
+					<tr>
+						<td colspan="1" style="font-size: 15px; font-weight: bold; padding-top: 30px;">Additional Notes</td>
+						<td colspan="4" style="padding-top: 30px; font-size: 15px; font-weight: bold; padding-top: 30px;">{{ invoice.note|default:"" }}</td>
+					</tr>
+					{% endif %}
                 </tbody>
                 <tfoot>
 					<tr>
@@ -245,7 +251,7 @@
 				<div class="right-text" style="margin-bottom: 0px !important; font-weight: bold; font-size: 15px;">ફોર, {{ invoice.get_bill_template_display }}</div>
 			</div>
 			<div class="bottom-note clearfix" aria-label="Footer note">
-				<div class="left-text" style="font-weight: bold; font-size: 15px;"> Note : This bill is computer generated and does not require a signature. </div>
+				<div class="left-text" style="font-weight: bold; font-size: 10px;"> Note : This bill is computer generated and does not require a signature. </div>
 			</div>
 		</div>
 		<div class="print-controls no-print">
@@ -256,7 +262,7 @@
 				Press this button or use Ctrl+P to print the invoice
 			</div>
 			<div class="print-instructions">
-				<a href="{% url 'invoice_list' %}" style="color: #666;">&larr; Back to invoices list</a>
+				<a href="javascript:history.back()" style="color: #666;">&larr; Back</a>
 			</div>
 		</div>
 	</body>

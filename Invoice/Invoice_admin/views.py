@@ -911,10 +911,19 @@ class ModuleDeleteView(View):
         return redirect('module_list')
 
 @method_decorator(permission_required('customer_list'), name='dispatch')
-class CustomerListView(View):
+class ActiveCustomerListView(View):
     def get(self, request):
-        customers = User.objects.filter(role_id=2)  # role_id 2 is for customers
-        return render(request, 'Admin/User/Customer_List.html', {
+        customers = User.objects.filter(role_id=2, is_active=True)  # role_id 2 is for customers
+        return render(request, 'Admin/User/Active_Customer_List.html', {
+            'customers': customers,
+            'breadcrumb': {'child': 'Customer Management'}
+        })
+
+@method_decorator(permission_required('customer_list'), name='dispatch')
+class InactiveCustomerListView(View):
+    def get(self, request):
+        customers = User.objects.filter(role_id=2, is_active=False)  # role_id 2 is for customers
+        return render(request, 'Admin/User/Inactive_Customer_List.html', {
             'customers': customers,
             'breadcrumb': {'child': 'Customer Management'}
         })
@@ -1026,6 +1035,7 @@ class InvoiceCreateView(View):
             bottle_amount = Decimal(request.POST.get('bottle_amount', '25.0'))
             other = request.POST.get('other', '')
             other_amount = Decimal(request.POST.get('other_amount', '0.0'))
+            note = request.POST.get('note', '')  # Add this line
             
             # Validate required fields
             if not user_id:
@@ -1069,6 +1079,7 @@ class InvoiceCreateView(View):
                 bottle_count=bottle_count,
                 bottle_amount=bottle_amount,
                 other=other,
+                note=note,
                 other_amount=other_amount,
                 total_amount=total_amount,
                 bill_amount=total_amount  # Set bill_amount as well
@@ -1093,7 +1104,7 @@ class InvoiceEditView(View):
             user_id = request.POST.get('user')
             bill_template = request.POST.get('bill_template')
             bill_date = request.POST.get('bill_date')
-            
+            note = request.POST.get('note', '')  # Add this line
             # Convert to Decimal to avoid type mixing
             jug_count = int(request.POST.get('jug_count', 0))
             jug_amount = Decimal(request.POST.get('jug_amount', '25.0'))
@@ -1146,7 +1157,7 @@ class InvoiceEditView(View):
             invoice.other_amount = other_amount
             invoice.total_amount = total_amount
             invoice.bill_amount = total_amount  # Update bill_amount as well
-            
+            invoice.note = note
             invoice.save()
             
             messages.success(request, f'Invoice {invoice.bill_number} updated successfully!')
