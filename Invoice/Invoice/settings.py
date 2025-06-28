@@ -96,10 +96,10 @@ WSGI_APPLICATION = 'Invoice.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'invoice',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
+        'NAME': 'Devansh1312$Invoice',
+        'USER': 'Devansh1312',
+        'PASSWORD': 'ShahDevansh7410',
+        'HOST': 'Devansh1312.mysql.pythonanywhere-services.com',
         'PORT': '3306',
          'OPTIONS': {
             'charset': 'utf8mb4',  # Set charset to utf8mb4 to support emojis
@@ -193,7 +193,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,     
+    'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),  # Use Bearer tokens for authorization
 }
 
