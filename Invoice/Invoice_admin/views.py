@@ -1053,6 +1053,8 @@ class InvoiceCreateView(View):
             user_id = request.POST.get('user')
             bill_template = request.POST.get('bill_template')
             bill_date = request.POST.get('bill_date')
+            payment_method = request.POST.get('payment_method', 'cash')
+            bill_status = request.POST.get('bill_status', 'paid')
             
             # Convert to Decimal to avoid type mixing
             jug_count = int(request.POST.get('jug_count', 0))
@@ -1061,7 +1063,7 @@ class InvoiceCreateView(View):
             bottle_amount = Decimal(request.POST.get('bottle_amount', '25.0'))
             other = request.POST.get('other', '')
             other_amount = Decimal(request.POST.get('other_amount', '0.0'))
-            note = request.POST.get('note', '')  # Add this line
+            note = request.POST.get('note', '')
             
             # Validate required fields
             if not user_id:
@@ -1098,6 +1100,8 @@ class InvoiceCreateView(View):
                 user=user,
                 bill_template=bill_template,
                 bill_date=bill_date,
+                payment_method=payment_method,
+                bill_status=bill_status,
                 jug=jug_count,  # Keep for backward compatibility
                 jug_count=jug_count,
                 jug_amount=jug_amount,
@@ -1122,6 +1126,7 @@ class InvoiceCreateView(View):
             return redirect('invoice_list')
 
 
+
 class InvoiceEditView(View):
     def post(self, request, pk):
         invoice = get_object_or_404(Invoice, pk=pk)
@@ -1138,6 +1143,8 @@ class InvoiceEditView(View):
             bottle_amount = Decimal(request.POST.get('bottle_amount', '25.0'))
             other = request.POST.get('other', '')
             other_amount = Decimal(request.POST.get('other_amount', '0.0'))
+            payment_method = request.POST.get('payment_method', 'cash')
+            bill_status = request.POST.get('bill_status', 'paid')
             
             # Validate required fields
             if not user_id:
@@ -1184,6 +1191,8 @@ class InvoiceEditView(View):
             invoice.total_amount = total_amount
             invoice.bill_amount = total_amount  # Update bill_amount as well
             invoice.note = note
+            invoice.payment_method = payment_method
+            invoice.bill_status = bill_status
             invoice.save()
             
             messages.success(request, f'Invoice {invoice.bill_number} updated successfully!')

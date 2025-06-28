@@ -42,6 +42,8 @@
                                         <th>Template</th>
                                         <th>Date</th>
                                         <th>Amount</th>
+                                        <th>Payment</th>
+                                        <th>Status</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -54,6 +56,12 @@
                                         <td>{{ invoice.get_bill_template_display }}</td>
                                         <td>{{ invoice.bill_date|date:"d/m/Y" }}</td>
                                         <td>₹{{ invoice.total_amount|floatformat:2 }}</td>
+                                        <td>{{ invoice.get_payment_method_display }}</td>
+                                        <td>
+                                            <span class="badge badge-{% if invoice.bill_status == 'paid' %}success{% else %}warning{% endif %}">
+                                                {{ invoice.get_bill_status_display }}
+                                            </span>
+                                        </td>
                                         <td>
                                             <div class="btn-group" role="group">
                                                 <!-- View PDF Button - Now opens print dialog -->
@@ -75,6 +83,8 @@
                                                     data-bottle-amount="{{ invoice.bottle_amount }}"
                                                     data-other="{{ invoice.other|default:'' }}"
                                                     data-other-amount="{{ invoice.other_amount }}"
+                                                    data-payment-method="{{ invoice.payment_method }}"
+                                                    data-bill-status="{{ invoice.bill_status }}"
                                                     data-toggle="modal" 
                                                     data-note="{{ invoice.note|default:'' }}"
                                                     data-target="#editInvoiceModal"
@@ -96,7 +106,7 @@
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="7" class="text-center">No invoices found.</td>
+                                        <td colspan="9" class="text-center">No invoices found.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -146,10 +156,36 @@
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="bill_date">Bill Date *</label>
-                        <input type="date" class="form-control" id="bill_date" name="bill_date" value="{{ today }}" required>
-                        <div class="invalid-feedback-bill_date text-danger"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="bill_date">Bill Date *</label>
+                                <input type="date" class="form-control" id="bill_date" name="bill_date" value="{{ today }}" required>
+                                <div class="invalid-feedback-bill_date text-danger"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="payment_method">Payment Method *</label>
+                                <select class="form-control" id="payment_method" name="payment_method" required>
+                                    <option value="cash" selected>Cash</option>
+                                    <option value="check">Check</option>
+                                    <option value="UPI">UPI</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="bill_status">Bill Status *</label>
+                                <select class="form-control" id="bill_status" name="bill_status" required>
+                                    <option value="paid" selected>Paid</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <hr>
@@ -279,10 +315,36 @@
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="edit_bill_date">Bill Date *</label>
-                        <input type="date" class="form-control" id="edit_bill_date" name="bill_date" required>
-                        <div class="invalid-feedback-edit_bill_date text-danger"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_bill_date">Bill Date *</label>
+                                <input type="date" class="form-control" id="edit_bill_date" name="bill_date" required>
+                                <div class="invalid-feedback-edit_bill_date text-danger"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_payment_method">Payment Method *</label>
+                                <select class="form-control" id="edit_payment_method" name="payment_method" required>
+                                    <option value="cash">Cash</option>
+                                    <option value="check">Check</option>
+                                    <option value="UPI">UPI</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_bill_status">Bill Status *</label>
+                                <select class="form-control" id="edit_bill_status" name="bill_status" required>
+                                    <option value="paid">Paid</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <hr>
@@ -452,6 +514,10 @@
     .select2-container--default .select2-selection--single .select2-selection__arrow {
         height: calc(2.25rem + 2px) !important;
     }
+    
+    .badge {
+        font-size: 100%;
+    }
 </style>
 
 <script>
@@ -542,6 +608,8 @@ $(document).ready(function() {
         var bottleAmount = $(this).data('bottle-amount');
         var other = $(this).data('other');
         var otherAmount = $(this).data('other-amount');
+        var paymentMethod = $(this).data('payment-method');
+        var billStatus = $(this).data('bill-status');
         var note = $(this).data('note');
 
         // Destroy previous select2 instance
@@ -559,6 +627,8 @@ $(document).ready(function() {
         $('#edit_bottle_amount').val(bottleAmount);
         $('#edit_other').val(other);
         $('#edit_other_amount').val(otherAmount);
+        $('#edit_payment_method').val(paymentMethod);
+        $('#edit_bill_status').val(billStatus);
         $('#edit_note').val(note);
         
         // Calculate totals
