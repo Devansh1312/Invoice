@@ -990,9 +990,15 @@ class CustomerToggleStatusView(View):
         user = get_object_or_404(User, pk=pk, role_id=2)
         user.is_active = not user.is_active
         user.save()
+        print(f"User {user.username} status changed to {'active' if user.is_active else 'inactive'}")   
         
         status = "activated" if user.is_active else "deactivated"
         messages.success(request, f'Customer {status} successfully')
+        
+        # Redirect based on source_page or other logic
+        source_page = request.POST.get('source_page', 'customer_list')
+        if source_page == 'inactive_customers':
+            return redirect('inactive_customers')
         return redirect('customer_list')
 
 @method_decorator(permission_required('customer_list'), name='dispatch')
@@ -1008,13 +1014,33 @@ class CustomerDeleteView(View):
         return redirect('customer_list')
 
 
+
+class CustomerSearchView(View):
+    def get(self, request):
+        search_term = request.GET.get('q', '').strip()
+        
+        if not search_term:
+            return JsonResponse({'results': [], 'total_count': 0})
+        
+        # Search by name or phone number
+        customers = User.objects.filter(Q(role_id=2) & (Q(name__icontains=search_term) | Q(phone__icontains=search_term)))
+        
+        results = [{
+            'id': customer.id,
+            'text': f"{customer.name} - {customer.phone}"
+        } for customer in customers]
+        
+        return JsonResponse({
+            'results': results,
+            'total_count': len(results)
+        })
+
+
 class InvoiceListView(View):
     def get(self, request):
         invoices = Invoice.objects.all().order_by('-bill_date')
-        customers = User.objects.filter(role_id=2)  # Assuming role_id 2 is for customers
         return render(request, 'Admin/Invoice/invoice_list.html', {
             'invoices': invoices,
-            'customers': customers,
             'today': date.today().strftime('%Y-%m-%d'),
             'templates': Invoice.BILL_TEMPLATE_CHOICES
         })

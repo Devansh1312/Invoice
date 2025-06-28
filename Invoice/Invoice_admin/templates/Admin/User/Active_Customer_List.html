@@ -57,7 +57,7 @@
                                                     {% if customer.is_active %}checked{% endif %}>
                                                 <span class="slider round"></span>
                                             </label>
-                                            <form id="status-form-{{ customer.id }}" method="post" action="{% url 'customer_toggle_status' pk=customer.id %}" style="display: none;">
+                                            <form id="status-form-{{ customer.id }}" method="post" action="{% url 'customer_toggle_status' pk=customer.id %}">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="source_page" value="customer_list">
                                             </form>
@@ -217,7 +217,7 @@
 
 <!-- Plugins JS -->
 <script src="{% static 'assets/js/datatable/datatables/jquery.dataTables.min.js' %}"></script>
-<script src="{% static 'assets/js/datatable/datatables/datatable.custom.js' %}"></script>
+<!-- <script src="{% static 'assets/js/datatable/datatables/datatable.custom.js' %}"></script> -->
 <script src="{% static 'assets/js/tooltip-init.js' %}"></script>
 <script src="{% static 'assets/js/icons/feather-icon/feather.min.js' %}"></script>
 <script src="{% static 'assets/js/icons/feather-icon/feather-icon.js' %}"></script>
@@ -298,16 +298,25 @@
 </style>
 
 <script>
+    
 $(document).ready(function() {
     // Initialize Feather Icons
     feather.replace();
 
     // Status toggle switch
     $('.status-toggle').change(function() {
-        var customerId = $(this).data('id');
-        $('#status-form-' + customerId).submit();
+        var form = $('#status-form-' + $(this).data('id'));
+        form.submit();
     });
-
+    $('#basic-1').DataTable({
+        // your DataTable options here
+        "drawCallback": function(settings) {
+            // Re-initialize Feather Icons for new rows
+            feather.replace();
+            
+            // No need to rebind the toggle events if using event delegation
+        }
+    });
     // Edit Customer - Load data directly from data attributes
     $('.edit-customer').on('click', function(e) {
         e.preventDefault();

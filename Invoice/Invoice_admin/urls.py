@@ -62,6 +62,9 @@ urlpatterns = [
     path('invoices/<int:pk>/pdf/', InvoicePdfView.as_view(), name='invoice_pdf'),
     path('invoices/<int:pk>/print/', print_invoice, name='invoice_print'),
     path('invoices/<int:pk>/delete/', InvoiceDeleteView.as_view(), name='invoice_delete'),
+
+    path('invoices/search-customers/', CustomerSearchView.as_view(), name='search_customers'),
+
 ]
 
 
